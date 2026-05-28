@@ -130,6 +130,7 @@
                         <Border Style="{StaticResource CardStyle}">
                             <Border.ContextMenu>
                                 <ContextMenu>
+                                    <MenuItem Header="重命名" Command="{Binding RenameCommand}" />
                                     <MenuItem Header="更改封面" Command="{Binding ChangeCoverCommand}" />
                                     <MenuItem Header="删除" Command="{Binding DeleteCommand}" />
                                 </ContextMenu>

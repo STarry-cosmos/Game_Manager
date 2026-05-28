@@ -486,3 +486,6 @@ C:\Users\STarry\Desktop\game_mananger\Game_Manager\obj\Release\net8.0-windows\wi
 C:\Users\STarry\Desktop\game_mananger\Game_Manager\obj\Release\net8.0-windows\win-x86\Game_Manager.pdb
 C:\Users\STarry\Desktop\game_mananger\Game_Manager\obj\Release\net8.0-windows\win-x86\Game_Manager.genruntimeconfig.cache
 C:\Users\STarry\Desktop\game_mananger\Game_Manager\obj\Release\net8.0-windows\win-x86\ref\Game_Manager.dll
+C:\Users\STarry\Desktop\game_mananger\Game_Manager\obj\Release\net8.0-windows\win-x86\Views\RenameWindow.baml
+C:\Users\STarry\Desktop\game_mananger\Game_Manager\obj\Release\net8.0-windows\win-x86\Views\RenameWindow.g.cs
+C:\Users\STarry\Desktop\game_mananger\Game_Manager\obj\Release\net8.0-windows\win-x86\Game_Manager.sourcelink.json

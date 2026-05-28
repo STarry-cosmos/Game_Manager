@@ -23,7 +23,16 @@ namespace Game_Manager.ViewModels
         private DateTime? _sessionStartUtc;
 
         public int Id => _model.Id;
-        public string Name => _model.Name;
+        public string Name
+        {
+            get => _model.Name;
+            private set
+            {
+                if (_model.Name == value) return;
+                _model.Name = value;
+                OnPropertyChanged(nameof(Name));
+            }
+        }
         public string ExecutablePath => _model.ExecutablePath;
 
         public bool IsRunning
@@ -39,6 +48,7 @@ namespace Game_Manager.ViewModels
         }
 
         public ICommand DeleteCommand { get; }
+        public ICommand RenameCommand { get; }
 
         public event Action<GameItemViewModel>? Deleted;
         public string ButtonText => IsRunning ? "游戏中……" : "启动游戏";
@@ -64,6 +74,7 @@ namespace Game_Manager.ViewModels
             PlayCommand = new RelayCommand(ExecutePlayCommand, CanExecutePlayCommand);
             ChangeCoverCommand = new RelayCommand(ExecuteChangeCover);
             DeleteCommand = new RelayCommand(ExecuteDeleteCommand);
+            RenameCommand = new RelayCommand(ExecuteRenameCommand);
 
             _uiTimer = new DispatcherTimer(DispatcherPriority.Normal)
             {
@@ -266,6 +277,37 @@ namespace Game_Manager.ViewModels
                 System.Windows.MessageBox.Show($"删除失败：{ex.Message}", "错误", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
         }
+
+        private void ExecuteRenameCommand()
+        {
+            try
+            {
+                var dialog = new Views.RenameWindow(Name)
+                {
+                    Owner = System.Windows.Application.Current?.MainWindow
+                };
+
+                if (dialog.ShowDialog() == true)
+                {
+                    var newName = dialog.NewName;
+                    if (string.IsNullOrWhiteSpace(newName) || newName == Name) return;
+
+                    var rec = _db.GetGameById(Id);
+                    if (rec != null)
+                    {
+                        rec.Name = newName;
+                        _db.UpdateGame(rec);
+                        Name = newName;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Rename failed: {ex}");
+                System.Windows.MessageBox.Show($"重命名失败：{ex.Message}", "错误", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+        }
+
         private bool CanExecutePlayCommand()
         {
             // prevent duplicate starts

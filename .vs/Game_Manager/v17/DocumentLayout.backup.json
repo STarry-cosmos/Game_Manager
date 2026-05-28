@@ -3,6 +3,10 @@
   "WorkspaceRootPath": "C:\\Users\\STarry\\Desktop\\game_mananger\\Game_Manager\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{DDE378E3-DDBD-4C35-93C7-1B8E023FA625}|Game_Manager.csproj|c:\\users\\starry\\desktop\\game_mananger\\game_manager\\views\\renamewindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{DDE378E3-DDBD-4C35-93C7-1B8E023FA625}|Game_Manager.csproj|solutionrelative:views\\renamewindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{DDE378E3-DDBD-4C35-93C7-1B8E023FA625}|Game_Manager.csproj|c:\\users\\starry\\desktop\\game_mananger\\game_manager\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
       "RelativeMoniker": "D:0:0:{DDE378E3-DDBD-4C35-93C7-1B8E023FA625}|Game_Manager.csproj|solutionrelative:mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
     },
@@ -27,6 +31,18 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "RenameWindow.xaml",
+              "DocumentMoniker": "C:\\Users\\STarry\\Desktop\\game_mananger\\Game_Manager\\Views\\RenameWindow.xaml",
+              "RelativeDocumentMoniker": "Views\\RenameWindow.xaml",
+              "ToolTip": "C:\\Users\\STarry\\Desktop\\game_mananger\\Game_Manager\\Views\\RenameWindow.xaml",
+              "RelativeToolTip": "Views\\RenameWindow.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2026-05-28T15:14:56.462Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
               "Title": "MainWindow.xaml",
               "DocumentMoniker": "C:\\Users\\STarry\\Desktop\\game_mananger\\Game_Manager\\MainWindow.xaml",
               "RelativeDocumentMoniker": "MainWindow.xaml",
@@ -38,7 +54,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "MainWindow.xaml.cs",
               "DocumentMoniker": "C:\\Users\\STarry\\Desktop\\game_mananger\\Game_Manager\\MainWindow.xaml.cs",
               "RelativeDocumentMoniker": "MainWindow.xaml.cs",
@@ -46,8 +62,7 @@
               "RelativeToolTip": "MainWindow.xaml.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-28T08:10:56.132Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-28T08:10:56.132Z"
             }
           ]
         }

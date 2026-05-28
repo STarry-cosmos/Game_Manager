@@ -57,3 +57,6 @@ C:\Users\STarry\Desktop\game_mananger\Game_Manager\bin\Debug\net8.0-windows\runt
 C:\Users\STarry\Desktop\game_mananger\Game_Manager\bin\Debug\net8.0-windows\runtimes\win-arm64\native\e_sqlite3.dll
 C:\Users\STarry\Desktop\game_mananger\Game_Manager\bin\Debug\net8.0-windows\runtimes\win-x64\native\e_sqlite3.dll
 C:\Users\STarry\Desktop\game_mananger\Game_Manager\bin\Debug\net8.0-windows\runtimes\win-x86\native\e_sqlite3.dll
+C:\Users\STarry\Desktop\game_mananger\Game_Manager\obj\Debug\net8.0-windows\Views\RenameWindow.baml
+C:\Users\STarry\Desktop\game_mananger\Game_Manager\obj\Debug\net8.0-windows\Views\RenameWindow.g.cs
+C:\Users\STarry\Desktop\game_mananger\Game_Manager\obj\Debug\net8.0-windows\Game_Manager.sourcelink.json
