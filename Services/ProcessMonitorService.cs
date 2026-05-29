@@ -158,11 +158,8 @@ namespace Game_Manager.Services
                     var record = _db.GetGameById(gameId);
                     if (record != null)
                     {
-                        // total play time add difference between final and any previously saved session time
-                        var previouslySaved = record.CurrentSessionTime;
-                        var delta = finalSeconds - previouslySaved;
-                        if (delta < 0) delta = 0;
-                        record.TotalPlayTime += delta;
+                        // total play time should include the full final session duration
+                        record.TotalPlayTime += finalSeconds;
                         record.CurrentSessionTime = 0;
                         record.IsRunning = false;
                         record.ProcessId = null;
