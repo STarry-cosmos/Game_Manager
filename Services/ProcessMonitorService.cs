@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
@@ -101,6 +102,97 @@ namespace Game_Manager.Services
             catch (Exception ex)
             {
                 Debug.WriteLine($"Failed to update DB on StartGame: {ex}");
+            }
+        }
+
+        public void RecoverRunningGames(IEnumerable<GameRecord> runningGames)
+        {
+            if (runningGames == null) return;
+
+            foreach (var record in runningGames)
+            {
+                try
+                {
+                    RecoverRunningGame(record);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"RecoverRunningGames failed for {record?.Id}: {ex}");
+                }
+            }
+        }
+
+        private void RecoverRunningGame(GameRecord record)
+        {
+            if (record == null || !record.IsRunning || !record.ProcessId.HasValue)
+            {
+                return;
+            }
+
+            Process? process = null;
+            try
+            {
+                process = Process.GetProcessById(record.ProcessId.Value);
+            }
+            catch
+            {
+                process = null;
+            }
+
+            var isAlive = false;
+            if (process != null)
+            {
+                try
+                {
+                    isAlive = !process.HasExited;
+                }
+                catch
+                {
+                    isAlive = false;
+                }
+            }
+
+            if (!isAlive)
+            {
+                record.TotalPlayTime += record.CurrentSessionTime;
+                record.CurrentSessionTime = 0;
+                record.IsRunning = false;
+                record.ProcessId = null;
+                record.LastPlayed = DateTime.UtcNow;
+                _db.UpdateGame(record);
+                try { process?.Dispose(); } catch { }
+                return;
+            }
+
+            // attach to the existing live process and resume monitoring
+            var gameId = record.Id;
+            try
+            {
+                var monitored = new MonitoredGame
+                {
+                    Process = process,
+                    SessionStartUtc = DateTime.UtcNow.AddSeconds(-record.CurrentSessionTime),
+                    LastSavedSeconds = record.CurrentSessionTime
+                };
+
+                var timer = new System.Timers.Timer(TimeSpan.FromSeconds(30).TotalMilliseconds)
+                {
+                    AutoReset = true,
+                    Enabled = true
+                };
+
+                timer.Elapsed += (s, e) => OnHeartbeat(gameId);
+                monitored.HeartbeatTimer = timer;
+
+                process!.EnableRaisingEvents = true;
+                process!.Exited += (s, e) => OnProcessExited(gameId);
+
+                _monitors[gameId] = monitored;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to recover running process for {gameId}: {ex}");
+                try { process?.Dispose(); } catch { }
             }
         }
 

@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Game_Manager.Data;
@@ -24,8 +26,23 @@ namespace Game_Manager.ViewModels
             _dbAdapter = new DatabaseManagerAdapter();
             _monitorService = new ProcessMonitorService(_dbAdapter);
 
+            RecoverRunningGameStates();
+
             AddGameCommand = new RelayCommand(AddGame);
             LoadGames();
+        }
+
+        private void RecoverRunningGameStates()
+        {
+            try
+            {
+                var runningGames = _dbAdapter.GetRunningGames();
+                _monitorService.RecoverRunningGames(runningGames);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"RecoverRunningGameStates failed: {ex}");
+            }
         }
 
         private void LoadGames()

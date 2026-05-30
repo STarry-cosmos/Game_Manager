@@ -11,6 +11,8 @@ namespace Game_Manager.Data
 
         public List<GameRecord> GetAllGames() => DatabaseManager.GetAllGames();
 
+        public List<GameRecord> GetRunningGames() => DatabaseManager.GetRunningGames();
+
         public GameRecord? GetGameById(int id) => DatabaseManager.GetGameById(id);
 
         public bool UpdateGame(GameRecord game) => DatabaseManager.UpdateGame(game);

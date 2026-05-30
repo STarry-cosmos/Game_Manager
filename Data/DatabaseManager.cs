@@ -119,6 +119,24 @@ VALUES (@Name, @ExecutablePath, @CoverImagePath, @TotalPlayTime, @CurrentSession
             return reader.Read() ? ReadGame(reader) : null;
         }
 
+        public static List<GameRecord> GetRunningGames()
+        {
+            var games = new List<GameRecord>();
+            using var connection = new SQLiteConnection(ConnectionString);
+            connection.Open();
+
+            using var command = connection.CreateCommand();
+            command.CommandText = @"SELECT Id, Name, ExecutablePath, CoverImagePath, TotalPlayTime, CurrentSessionTime, LastPlayed, IsRunning, ProcessId, CreatedAt FROM Games WHERE IsRunning = 1;";
+
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                games.Add(ReadGame(reader));
+            }
+
+            return games;
+        }
+
         public static bool UpdateGame(GameRecord game)
         {
             lock (DbLock)

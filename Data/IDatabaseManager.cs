@@ -7,6 +7,7 @@ namespace Game_Manager.Data
         void InitializeDatabase();
         int InsertGame(GameRecord game);
         List<GameRecord> GetAllGames();
+        List<GameRecord> GetRunningGames();
         GameRecord? GetGameById(int id);
         bool UpdateGame(GameRecord game);
         bool DeleteGame(int id);
