@@ -49,6 +49,7 @@ namespace Game_Manager.ViewModels
 
         public ICommand DeleteCommand { get; }
         public ICommand RenameCommand { get; }
+        public ICommand OpenFolderCommand { get; }
 
         public event Action<GameItemViewModel>? Deleted;
         public string ButtonText => IsRunning ? "游戏中……" : "启动游戏";
@@ -75,6 +76,7 @@ namespace Game_Manager.ViewModels
             ChangeCoverCommand = new RelayCommand(ExecuteChangeCover);
             DeleteCommand = new RelayCommand(ExecuteDeleteCommand);
             RenameCommand = new RelayCommand(ExecuteRenameCommand);
+            OpenFolderCommand = new RelayCommand(ExecuteOpenFolder);
 
             _uiTimer = new DispatcherTimer(DispatcherPriority.Normal)
             {
@@ -329,6 +331,39 @@ namespace Game_Manager.ViewModels
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"PlayCommand failed: {ex}");
+            }
+        }
+
+        private void ExecuteOpenFolder()
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(ExecutablePath) || !System.IO.File.Exists(ExecutablePath))
+                {
+                    System.Windows.MessageBox.Show("可执行文件不存在", "错误", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                    return;
+                }
+
+                var fileInfo = new System.IO.FileInfo(ExecutablePath);
+                var folderPath = fileInfo.DirectoryName;
+
+                if (string.IsNullOrWhiteSpace(folderPath))
+                {
+                    System.Windows.MessageBox.Show("无法获取文件夹路径", "错误", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                    return;
+                }
+
+                // Open folder and select the file
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "explorer.exe",
+                    Arguments = $"/select,\"{ExecutablePath}\""
+                });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"OpenFolder failed: {ex}");
+                System.Windows.MessageBox.Show($"打开文件夹失败：{ex.Message}", "错误", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
         }
 
