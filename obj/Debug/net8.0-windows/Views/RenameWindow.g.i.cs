@@ -60,7 +60,7 @@ namespace Game_Manager.Views {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/Game_Manager;V1.0.0.0;component/views/renamewindow.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/Game_Manager;component/views/renamewindow.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\Views\RenameWindow.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

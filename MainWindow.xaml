@@ -91,6 +91,7 @@
             <Setter Property="Width" Value="Auto" />
             <Setter Property="MinWidth" Value="100" />
         </Style>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
     </Window.Resources>
 
     <Grid Background="{StaticResource WindowBackground}">
@@ -98,24 +99,28 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="360" />
+        </Grid.ColumnDefinitions>
 
-        <Border Background="{StaticResource HeaderBackground}"
+        <Border Grid.ColumnSpan="2" Background="{StaticResource HeaderBackground}"
                 CornerRadius="18"
                 Padding="18"
                 Margin="0,10,0,8">
             <DockPanel LastChildFill="False">
                 <StackPanel Orientation="Vertical" DockPanel.Dock="Left">
                     <TextBlock Text="游戏管理" FontSize="28" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" />
-                    <TextBlock Text="右键卡片查看更多操作" FontSize="13" Foreground="{StaticResource TextSecondary}" Margin="0,6,0,0" />
+                    <TextBlock Text="点击卡片显示右侧详情" FontSize="13" Foreground="{StaticResource TextSecondary}" Margin="0,6,0,0" />
                 </StackPanel>
                 <Button Command="{Binding AddGameCommand}"
                         Style="{StaticResource PrimaryButtonStyle}"
                         Content="添加游戏"
-                        DockPanel.Dock="Right" Width="67" />
+                        DockPanel.Dock="Right" Width="92" />
             </DockPanel>
         </Border>
 
-        <ScrollViewer Grid.Row="1"
+        <ScrollViewer Grid.Row="1" Grid.Column="0"
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled"
                       Padding="4">
@@ -136,7 +141,7 @@
                                     <MenuItem Header="删除" Command="{Binding DeleteCommand}" />
                                 </ContextMenu>
                             </Border.ContextMenu>
-                            <DockPanel LastChildFill="True">
+                            <DockPanel LastChildFill="True" MouseLeftButtonUp="OnCardClicked" Cursor="Hand">
                                 <Image Source="{Binding CoverImage}"
                                        Width="216"
                                        Height="120"
@@ -191,5 +196,58 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
         </ScrollViewer>
+
+        <Border Grid.Row="1" Grid.Column="1"
+                Background="{StaticResource CardBackground}"
+                CornerRadius="18"
+                Padding="18"
+                Margin="12,10,0,10"
+                Visibility="{Binding IsGameSelected, Converter={StaticResource BoolToVisibility}}"
+                BorderBrush="{StaticResource CardBorderBrush}"
+                BorderThickness="1">
+            <StackPanel>
+                <TextBlock Text="游戏详情" FontSize="20" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" Margin="0,0,0,12" />
+
+                <TextBlock Text="游戏名" Foreground="{StaticResource TextSecondary}" FontSize="12" />
+                <TextBlock Text="{Binding SelectedGame.Name}" Foreground="{StaticResource TextPrimary}" FontSize="16" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Margin="0,4,0,12" />
+
+                <TextBlock Text="所在路径" Foreground="{StaticResource TextSecondary}" FontSize="12" />
+                <DockPanel Margin="0,4,0,12">
+                    <TextBlock Text="{Binding SelectedGame.ExecutablePath}"
+                               Foreground="{StaticResource TextPrimary}"
+                               FontSize="12"
+                               TextWrapping="Wrap"
+                               Width="220"
+                               TextTrimming="CharacterEllipsis" />
+                    <Button Command="{Binding SelectedGame.OpenFolderCommand}"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            Content="打开"
+                            Width="72"
+                            Margin="8,0,0,0" />
+                </DockPanel>
+
+                <TextBlock Text="当前时长" Foreground="{StaticResource TextSecondary}" FontSize="12" />
+                <TextBlock Text="{Binding SelectedGame.CurrentSessionDisplay}"
+                           Foreground="{StaticResource TextPrimary}"
+                           FontSize="16"
+                           FontWeight="SemiBold"
+                           Margin="0,4,0,20" />
+
+                <TextBlock Text="操作" Foreground="{StaticResource TextSecondary}" FontSize="12" />
+                <StackPanel Orientation="Vertical" Margin="0,8,0,0">
+                    <Button Command="{Binding SelectedGame.RenameCommand}"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            Content="重命名" 
+                            Margin="0,0,0,8" />
+                    <Button Command="{Binding SelectedGame.ChangeCoverCommand}"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            Content="更改封面" 
+                            Margin="0,0,0,8" />
+                    <Button Command="{Binding SelectedGame.DeleteCommand}"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            Content="删除" Background="Red" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
     </Grid>
 </Window>

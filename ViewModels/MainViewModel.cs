@@ -17,6 +17,22 @@ namespace Game_Manager.ViewModels
         public ObservableCollection<GameItemViewModel> Games { get; } = new();
 
         public IRelayCommand AddGameCommand { get; }
+        public IRelayCommand<GameItemViewModel> SelectGameCommand { get; }
+
+        private GameItemViewModel? _selectedGame;
+        public GameItemViewModel? SelectedGame
+        {
+            get => _selectedGame;
+            private set
+            {
+                if (_selectedGame == value) return;
+                _selectedGame = value;
+                OnPropertyChanged(nameof(SelectedGame));
+                OnPropertyChanged(nameof(IsGameSelected));
+            }
+        }
+
+        public bool IsGameSelected => SelectedGame != null;
 
         private readonly ProcessMonitorService _monitorService;
         private readonly IDatabaseManager _dbAdapter;
@@ -29,6 +45,7 @@ namespace Game_Manager.ViewModels
             RecoverRunningGameStates();
 
             AddGameCommand = new RelayCommand(AddGame);
+            SelectGameCommand = new RelayCommand<GameItemViewModel>(SelectGame);
             LoadGames();
         }
 
@@ -96,8 +113,17 @@ namespace Game_Manager.ViewModels
             {
                 item.Deleted -= OnItemDeleted;
                 Games.Remove(item);
+                if (SelectedGame == item)
+                {
+                    SelectedGame = null;
+                }
             }
             catch { }
+        }
+
+        private void SelectGame(GameItemViewModel? game)
+        {
+            SelectedGame = game;
         }
     }
 }

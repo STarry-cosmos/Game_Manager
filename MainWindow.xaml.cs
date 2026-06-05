@@ -8,6 +8,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Game_Manager.ViewModels;
 
 namespace Game_Manager
 {
@@ -19,6 +20,33 @@ namespace Game_Manager
         public MainWindow()
         {
             InitializeComponent();
+        }
+
+        private void OnCardClicked(object sender, MouseButtonEventArgs e)
+        {
+            if (e.OriginalSource is DependencyObject source && IsInsideButton(source))
+            {
+                return;
+            }
+
+            if (sender is FrameworkElement element && element.DataContext is GameItemViewModel game && DataContext is MainViewModel mainViewModel)
+            {
+                mainViewModel.SelectGameCommand.Execute(game);
+            }
+        }
+
+        private static bool IsInsideButton(DependencyObject? source)
+        {
+            while (source != null)
+            {
+                if (source is Button)
+                {
+                    return true;
+                }
+                source = VisualTreeHelper.GetParent(source);
+            }
+
+            return false;
         }
     }
 }
