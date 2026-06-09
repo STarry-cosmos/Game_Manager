@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Input;
 
 namespace Game_Manager.Views
 {
@@ -12,6 +13,17 @@ namespace Game_Manager.Views
             NameTextBox.Text = currentName;
             NameTextBox.SelectAll();
             NameTextBox.Focus();
+        }
+
+        private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            DragMove();
+        }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            DialogResult = false;
+            Close();
         }
 
         private void OkButton_Click(object sender, RoutedEventArgs e)

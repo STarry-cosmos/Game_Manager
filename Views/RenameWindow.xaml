@@ -3,63 +3,128 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="重命名游戏"
-        Height="260" Width="560"
+        Height="280" Width="560"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
         Style="{StaticResource MaterialDesignWindow}"
-        Background="{DynamicResource MaterialDesignPaper}"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         FontFamily="Microsoft YaHei UI, Roboto, Segoe UI">
-    <Grid Margin="28">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
 
-        <!-- Title -->
-        <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
-            <materialDesign:PackIcon Kind="Pencil"
-                                     Width="22" Height="22"
-                                     VerticalAlignment="Center"
-                                     Foreground="{DynamicResource PrimaryHueMidBrush}" />
-            <TextBlock Text="输入新的游戏名称"
-                       FontSize="18"
-                       FontWeight="SemiBold"
-                       Foreground="{DynamicResource MaterialDesignBody}"
-                       Margin="8,0,0,0"
-                       VerticalAlignment="Center" />
-        </StackPanel>
+    <Grid Margin="10">
+        <!-- Shadow + rounded corners -->
+        <Border CornerRadius="12"
+                Background="{DynamicResource MaterialDesignPaper}">
+            <Border.Effect>
+                <DropShadowEffect ShadowDepth="0" BlurRadius="16"
+                                  Opacity="0.5" Color="Black" />
+            </Border.Effect>
+        </Border>
 
-        <!-- Input -->
-        <TextBox x:Name="NameTextBox"
-                 Grid.Row="1"
-                 materialDesign:HintAssist.Hint="游戏名称"
-                 materialDesign:TextFieldAssist.HasClearButton="True"
-                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                 FontSize="15"
-                 Margin="0,0,0,20"
-                 TextWrapping="Wrap"
-                 AcceptsReturn="False" />
+        <!-- Content -->
+        <Border CornerRadius="12"
+                Background="{DynamicResource MaterialDesignPaper}">
+            <Border.Clip>
+                <RectangleGeometry Rect="0,0,540,260" RadiusX="12" RadiusY="12" />
+            </Border.Clip>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
 
-        <!-- Buttons -->
-        <StackPanel Grid.Row="2"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Right">
-            <Button Content="取消"
-                    Width="100"
-                    Height="38"
-                    IsCancel="True"
-                    Style="{StaticResource MaterialDesignOutlinedButton}"
-                    materialDesign:ButtonAssist.CornerRadius="10"
-                    Margin="0,0,10,0" />
-            <Button Content="确定"
-                    Width="100"
-                    Height="38"
-                    Click="OkButton_Click"
-                    Style="{StaticResource MaterialDesignRaisedButton}"
-                    materialDesign:ButtonAssist.CornerRadius="10" />
-        </StackPanel>
+                <!-- Title Bar -->
+                <Grid Height="36"
+                      Background="{DynamicResource MaterialDesignToolBarBackground}"
+                      MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                    <DockPanel LastChildFill="False">
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Left"
+                                    VerticalAlignment="Center" Margin="16,0,0,0">
+                            <materialDesign:PackIcon Kind="Pencil"
+                                                     Width="16" Height="16"
+                                                     VerticalAlignment="Center"
+                                                     Foreground="{DynamicResource PrimaryHueMidBrush}" />
+                            <TextBlock Text="重命名游戏"
+                                       FontSize="13"
+                                       FontWeight="Medium"
+                                       Foreground="{DynamicResource MaterialDesignBody}"
+                                       VerticalAlignment="Center"
+                                       Margin="8,0,0,0" />
+                        </StackPanel>
+                        <Button DockPanel.Dock="Right"
+                                Click="CloseButton_Click"
+                                Width="46" Height="36"
+                                ToolTip="关闭"
+                                Cursor="Hand">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="Bd" Background="Transparent">
+                                        <materialDesign:PackIcon Kind="WindowClose"
+                                                                 Width="16" Height="16"
+                                                                 HorizontalAlignment="Center"
+                                                                 VerticalAlignment="Center"
+                                                                 Foreground="{DynamicResource MaterialDesignBody}" />
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Bd" Property="Background" Value="#FFE81123" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                    </DockPanel>
+                </Grid>
+
+                <!-- Dialog Content -->
+                <Grid Grid.Row="1" Margin="28,20,28,24">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Label -->
+                    <TextBlock Text="输入新的游戏名称"
+                               FontSize="15"
+                               FontWeight="Medium"
+                               Foreground="{DynamicResource MaterialDesignBodyLight}"
+                               Margin="0,0,0,12" />
+
+                    <!-- Input -->
+                    <TextBox x:Name="NameTextBox"
+                             Grid.Row="1"
+                             materialDesign:HintAssist.Hint="游戏名称"
+                             materialDesign:TextFieldAssist.HasClearButton="True"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             FontSize="15"
+                             Margin="0,0,0,20"
+                             TextWrapping="Wrap"
+                             AcceptsReturn="False" />
+
+                    <!-- Buttons -->
+                    <StackPanel Grid.Row="2"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Right">
+                        <Button Content="取消"
+                                Width="100"
+                                Height="38"
+                                IsCancel="True"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                materialDesign:ButtonAssist.CornerRadius="10"
+                                Margin="0,0,10,0" />
+                        <Button Content="确定"
+                                Width="100"
+                                Height="38"
+                                Click="OkButton_Click"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                materialDesign:ButtonAssist.CornerRadius="10" />
+                    </StackPanel>
+                </Grid>
+            </Grid>
+        </Border>
     </Grid>
 </Window>

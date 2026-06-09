@@ -8,8 +8,10 @@
         mc:Ignorable="d"
         Title="Game Manager"
         Height="800" Width="1200"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
         Style="{StaticResource MaterialDesignWindow}"
-        Background="{DynamicResource MaterialDesignPaper}"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         TextElement.FontWeight="Regular"
         TextElement.FontSize="14"
@@ -21,313 +23,433 @@
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
     </Window.Resources>
 
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="380" />
-        </Grid.ColumnDefinitions>
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="0"
+                      ResizeBorderThickness="6"
+                      GlassFrameThickness="0"
+                      CornerRadius="0" />
+    </WindowChrome.WindowChrome>
 
-        <!-- Header -->
-        <materialDesign:Card Grid.ColumnSpan="2"
-                             Margin="16,12,16,8"
-                             Padding="20,16"
-                             UniformCornerRadius="16"
-                             Background="{DynamicResource MaterialDesignCardBackground}"
-                             materialDesign:ElevationAssist.Elevation="Dp2">
-            <DockPanel LastChildFill="False">
-                <StackPanel Orientation="Vertical" DockPanel.Dock="Left">
-                    <TextBlock Text="🎮 游戏管理"
-                               FontSize="26"
-                               FontWeight="Bold"
-                               Foreground="{DynamicResource MaterialDesignBody}" />
-                    <TextBlock Text="点击卡片查看游戏详情"
-                               FontSize="13"
-                               Foreground="{DynamicResource MaterialDesignBodyLight}"
-                               Margin="0,4,0,0" />
-                </StackPanel>
-                <Button Command="{Binding AddGameCommand}"
-                        Content="添加游戏"
-                        DockPanel.Dock="Right"
-                        Style="{StaticResource MaterialDesignRaisedButton}"
-                        materialDesign:ButtonAssist.CornerRadius="10"
-                        Width="110"
-                        Height="38"
-                        Margin="0,0,4,0" />
-            </DockPanel>
-        </materialDesign:Card>
+    <!-- Outer container with padding for shadow -->
+    <Grid Margin="10">
+        <!-- Shadow + rounded corners -->
+        <Border CornerRadius="12"
+                Background="{DynamicResource MaterialDesignPaper}">
+            <Border.Effect>
+                <DropShadowEffect ShadowDepth="0" BlurRadius="16"
+                                  Opacity="0.5" Color="Black" />
+            </Border.Effect>
+        </Border>
 
-        <!-- Game Cards ScrollViewer -->
-        <ScrollViewer Grid.Row="1" Grid.Column="0"
-                      VerticalScrollBarVisibility="Auto"
-                      HorizontalScrollBarVisibility="Disabled"
-                      Padding="8,4"
-                      materialDesign:ScrollViewerAssist.BubbleVerticalScroll="True">
-            <ItemsControl ItemsSource="{Binding Games}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <WrapPanel IsItemsHost="True" Orientation="Horizontal" />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <materialDesign:Card UniformCornerRadius="16"
-                                             Margin="10"
-                                             Width="244"
-                                             materialDesign:ElevationAssist.Elevation="Dp4"
-                                             Background="{DynamicResource MaterialDesignCardBackground}"
-                                             Cursor="Hand">
-                            <materialDesign:Card.ContextMenu>
-                                <ContextMenu>
-                                    <MenuItem Header="重命名" Command="{Binding RenameCommand}" />
-                                    <MenuItem Header="更改封面" Command="{Binding ChangeCoverCommand}" />
-                                    <MenuItem Header="打开所在路径" Command="{Binding OpenFolderCommand}" />
-                                    <Separator />
-                                    <MenuItem Header="删除" Command="{Binding DeleteCommand}" Foreground="#FFEF5350" />
-                                </ContextMenu>
-                            </materialDesign:Card.ContextMenu>
-                            <DockPanel LastChildFill="True" MouseLeftButtonUp="OnCardClicked">
-                                <!-- Cover Image -->
-                                <Grid Width="220" Height="124" Margin="12,12,12,0"
-                                      DockPanel.Dock="Top" ClipToBounds="True">
-                                    <Border CornerRadius="10" ClipToBounds="True">
-                                        <Image Source="{Binding CoverImage}"
-                                               Stretch="UniformToFill"
-                                               SnapsToDevicePixels="True"
-                                               VerticalAlignment="Top" />
-                                    </Border>
-                                    <Border CornerRadius="10" ClipToBounds="True"
-                                            Visibility="{Binding IsRunning, Converter={StaticResource BoolToVisibility}}"
-                                            Background="#CC000000">
-                                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                            <materialDesign:PackIcon Kind="GamepadVariant"
-                                                                     Width="32" Height="32"
+        <!-- Content (same rounded corners, clips children) -->
+        <Border x:Name="ContentBorder" CornerRadius="12"
+                Background="{DynamicResource MaterialDesignPaper}">
+            <Border.Clip>
+                <RectangleGeometry Rect="0,0,1180,780" RadiusX="12" RadiusY="12" />
+            </Border.Clip>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="380" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Custom Title Bar -->
+                <Grid Grid.Row="0" Grid.ColumnSpan="2"
+                      Height="36"
+                      Background="{DynamicResource MaterialDesignToolBarBackground}"
+                      MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                    <DockPanel LastChildFill="False">
+                        <!-- App title -->
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Left"
+                                    VerticalAlignment="Center" Margin="16,0,0,0">
+                            <materialDesign:PackIcon Kind="GamepadVariant"
+                                                     Width="18" Height="18"
+                                                     VerticalAlignment="Center"
+                                                     Foreground="{DynamicResource PrimaryHueMidBrush}" />
+                            <TextBlock Text="Game Manager"
+                                       FontSize="13"
+                                       FontWeight="Medium"
+                                       Foreground="{DynamicResource MaterialDesignBody}"
+                                       VerticalAlignment="Center"
+                                       Margin="8,0,0,0" />
+                        </StackPanel>
+
+                        <!-- Window control buttons -->
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right"
+                                    HorizontalAlignment="Right">
+                            <Button Click="MinimizeButton_Click"
+                                    Width="46" Height="36"
+                                    ToolTip="最小化"
+                                    Cursor="Hand">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="Bd" Background="Transparent">
+                                            <materialDesign:PackIcon Kind="WindowMinimize"
+                                                                     Width="16" Height="16"
                                                                      HorizontalAlignment="Center"
-                                                                     Foreground="{DynamicResource PrimaryHueMidBrush}" />
-                                            <TextBlock Text="游戏中..."
-                                                       Foreground="White"
+                                                                     VerticalAlignment="Center"
+                                                                     Foreground="{DynamicResource MaterialDesignBody}" />
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Bd" Property="Background" Value="#33FFFFFF" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                            <Button x:Name="MaximizeBtn"
+                                    Click="MaximizeButton_Click"
+                                    Width="46" Height="36"
+                                    ToolTip="最大化"
+                                    Cursor="Hand">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="Bd" Background="Transparent">
+                                            <materialDesign:PackIcon x:Name="MaxIcon"
+                                                                     Kind="WindowMaximize"
+                                                                     Width="16" Height="16"
+                                                                     HorizontalAlignment="Center"
+                                                                     VerticalAlignment="Center"
+                                                                     Foreground="{DynamicResource MaterialDesignBody}" />
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Bd" Property="Background" Value="#33FFFFFF" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                            <Button Click="CloseButton_Click"
+                                    Width="46" Height="36"
+                                    ToolTip="关闭"
+                                    Cursor="Hand">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="Bd" Background="Transparent">
+                                            <materialDesign:PackIcon Kind="WindowClose"
+                                                                     Width="16" Height="16"
+                                                                     HorizontalAlignment="Center"
+                                                                     VerticalAlignment="Center"
+                                                                     Foreground="{DynamicResource MaterialDesignBody}" />
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Bd" Property="Background" Value="#FFE81123" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                        </StackPanel>
+                    </DockPanel>
+                </Grid>
+
+                <!-- Header -->
+                <materialDesign:Card Grid.Row="1" Grid.ColumnSpan="2"
+                                     Margin="16,10,16,8"
+                                     Padding="20,16"
+                                     UniformCornerRadius="16"
+                                     Background="{DynamicResource MaterialDesignCardBackground}"
+                                     materialDesign:ElevationAssist.Elevation="Dp2">
+                    <DockPanel LastChildFill="False">
+                        <StackPanel Orientation="Vertical" DockPanel.Dock="Left">
+                            <TextBlock Text="🎮 游戏管理"
+                                       FontSize="26"
+                                       FontWeight="Bold"
+                                       Foreground="{DynamicResource MaterialDesignBody}" />
+                            <TextBlock Text="点击卡片查看游戏详情"
+                                       FontSize="13"
+                                       Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                       Margin="0,4,0,0" />
+                        </StackPanel>
+                        <Button Command="{Binding AddGameCommand}"
+                                Content="添加游戏"
+                                DockPanel.Dock="Right"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                materialDesign:ButtonAssist.CornerRadius="10"
+                                Width="110"
+                                Height="38"
+                                Margin="0,0,4,0" />
+                    </DockPanel>
+                </materialDesign:Card>
+
+                <!-- Game Cards ScrollViewer -->
+                <ScrollViewer Grid.Row="2" Grid.Column="0"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled"
+                              Padding="8,4"
+                              materialDesign:ScrollViewerAssist.BubbleVerticalScroll="True">
+                    <ItemsControl ItemsSource="{Binding Games}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel IsItemsHost="True" Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <materialDesign:Card UniformCornerRadius="16"
+                                                     Margin="10"
+                                                     Width="244"
+                                                     materialDesign:ElevationAssist.Elevation="Dp4"
+                                                     Background="{DynamicResource MaterialDesignCardBackground}"
+                                                     Cursor="Hand">
+                                    <materialDesign:Card.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Header="重命名" Command="{Binding RenameCommand}" />
+                                            <MenuItem Header="更改封面" Command="{Binding ChangeCoverCommand}" />
+                                            <MenuItem Header="打开所在路径" Command="{Binding OpenFolderCommand}" />
+                                            <Separator />
+                                            <MenuItem Header="删除" Command="{Binding DeleteCommand}" Foreground="#FFEF5350" />
+                                        </ContextMenu>
+                                    </materialDesign:Card.ContextMenu>
+                                    <DockPanel LastChildFill="True" MouseLeftButtonUp="OnCardClicked">
+                                        <!-- Cover Image -->
+                                        <Grid Width="220" Height="124" Margin="12,12,12,0"
+                                              DockPanel.Dock="Top" ClipToBounds="True">
+                                            <Border CornerRadius="10" ClipToBounds="True">
+                                                <Image Source="{Binding CoverImage}"
+                                                       Stretch="UniformToFill"
+                                                       SnapsToDevicePixels="True"
+                                                       VerticalAlignment="Top" />
+                                            </Border>
+                                            <Border CornerRadius="10" ClipToBounds="True"
+                                                    Visibility="{Binding IsRunning, Converter={StaticResource BoolToVisibility}}"
+                                                    Background="#CC000000">
+                                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                    <materialDesign:PackIcon Kind="GamepadVariant"
+                                                                             Width="32" Height="32"
+                                                                             HorizontalAlignment="Center"
+                                                                             Foreground="{DynamicResource PrimaryHueMidBrush}" />
+                                                    <TextBlock Text="游戏中..."
+                                                               Foreground="White"
+                                                               FontSize="16"
+                                                               FontWeight="Bold"
+                                                               HorizontalAlignment="Center"
+                                                               Margin="0,4,0,0" />
+                                                </StackPanel>
+                                            </Border>
+                                        </Grid>
+
+                                        <!-- Card Content -->
+                                        <StackPanel Margin="14,12,14,14">
+                                            <TextBlock Text="{Binding Name}"
                                                        FontSize="16"
                                                        FontWeight="Bold"
-                                                       HorizontalAlignment="Center"
-                                                       Margin="0,4,0,0" />
+                                                       Foreground="{DynamicResource MaterialDesignBody}"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding ExecutablePath}"
+                                                       Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                                       FontSize="11"
+                                                       Margin="0,4,0,0"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       MaxHeight="36" />
+
+                                            <!-- Stats Row -->
+                                            <Border Margin="0,10,0,0"
+                                                    Padding="8,6"
+                                                    Background="{DynamicResource MaterialDesignToolBarBackground}"
+                                                    CornerRadius="8">
+                                                <StackPanel>
+                                                    <DockPanel>
+                                                        <materialDesign:PackIcon Kind="ClockOutline" Width="14" Height="14"
+                                                                                 VerticalAlignment="Center"
+                                                                                 Foreground="{DynamicResource PrimaryHueMidBrush}" />
+                                                        <TextBlock Text="{Binding CurrentSessionDisplay}"
+                                                                   Foreground="{DynamicResource MaterialDesignBody}"
+                                                                   FontWeight="Bold"
+                                                                   FontSize="12"
+                                                                   Margin="6,0,0,0"
+                                                                   VerticalAlignment="Center" />
+                                                    </DockPanel>
+                                                    <DockPanel Margin="0,4,0,0">
+                                                        <materialDesign:PackIcon Kind="CalendarClock" Width="14" Height="14"
+                                                                                 VerticalAlignment="Center"
+                                                                                 Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                                                        <TextBlock Text="{Binding LastPlayedDisplay}"
+                                                                   Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                                                   FontSize="11"
+                                                                   Margin="6,0,0,0"
+                                                                   VerticalAlignment="Center" />
+                                                    </DockPanel>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <!-- Play Button -->
+                                            <Button Command="{Binding PlayCommand}"
+                                                    Margin="0,10,0,0"
+                                                    Content="启动游戏"
+                                                    materialDesign:ButtonAssist.CornerRadius="10"
+                                                    Height="36">
+                                                <Button.Style>
+                                                    <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                                                                <Setter Property="Content" Value="游戏中……" />
+                                                                <Setter Property="IsEnabled" Value="False" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
                                         </StackPanel>
-                                    </Border>
-                                </Grid>
+                                    </DockPanel>
+                                </materialDesign:Card>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
 
-                                <!-- Card Content -->
-                                <StackPanel Margin="14,12,14,14">
-                                    <TextBlock Text="{Binding Name}"
-                                               FontSize="16"
-                                               FontWeight="Bold"
-                                               Foreground="{DynamicResource MaterialDesignBody}"
-                                               TextTrimming="CharacterEllipsis" />
-                                    <TextBlock Text="{Binding ExecutablePath}"
-                                               Foreground="{DynamicResource MaterialDesignBodyLight}"
-                                               FontSize="11"
-                                               Margin="0,4,0,0"
-                                               TextTrimming="CharacterEllipsis"
-                                               MaxHeight="36" />
+                <!-- Detail Panel -->
+                <materialDesign:Card Grid.Row="2" Grid.Column="1"
+                                     Margin="8,4,16,16"
+                                     Padding="22"
+                                     UniformCornerRadius="16"
+                                     Background="{DynamicResource MaterialDesignCardBackground}"
+                                     materialDesign:ElevationAssist.Elevation="Dp4"
+                                     Visibility="{Binding IsGameSelected, Converter={StaticResource BoolToVisibility}}">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <!-- Detail Header -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                                <materialDesign:PackIcon Kind="InformationOutline"
+                                                         Width="24" Height="24"
+                                                         VerticalAlignment="Center"
+                                                         Foreground="{DynamicResource PrimaryHueMidBrush}" />
+                                <TextBlock Text="游戏详情"
+                                           FontSize="22"
+                                           FontWeight="Bold"
+                                           Foreground="{DynamicResource MaterialDesignBody}"
+                                           Margin="8,0,0,0"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
 
-                                    <!-- Stats Row -->
-                                    <Border Margin="0,10,0,0"
-                                            Padding="8,6"
-                                            Background="{DynamicResource MaterialDesignToolBarBackground}"
-                                            CornerRadius="8">
-                                        <StackPanel>
-                                            <DockPanel>
-                                                <materialDesign:PackIcon Kind="ClockOutline" Width="14" Height="14"
-                                                                         VerticalAlignment="Center"
-                                                                         Foreground="{DynamicResource PrimaryHueMidBrush}" />
-                                                <TextBlock Text="{Binding CurrentSessionDisplay}"
-                                                           Foreground="{DynamicResource MaterialDesignBody}"
-                                                           FontWeight="Bold"
-                                                           FontSize="12"
-                                                           Margin="6,0,0,0"
-                                                           VerticalAlignment="Center" />
-                                            </DockPanel>
-                                            <DockPanel Margin="0,4,0,0">
-                                                <materialDesign:PackIcon Kind="CalendarClock" Width="14" Height="14"
-                                                                         VerticalAlignment="Center"
-                                                                         Foreground="{DynamicResource MaterialDesignBodyLight}" />
-                                                <TextBlock Text="{Binding LastPlayedDisplay}"
-                                                           Foreground="{DynamicResource MaterialDesignBodyLight}"
-                                                           FontSize="11"
-                                                           Margin="6,0,0,0"
-                                                           VerticalAlignment="Center" />
-                                            </DockPanel>
-                                        </StackPanel>
-                                    </Border>
+                            <Separator Margin="0,0,0,16"
+                                       Background="{DynamicResource MaterialDesignDivider}" />
 
-                                    <!-- Play Button -->
-                                    <Button Command="{Binding PlayCommand}"
-                                            Margin="0,10,0,0"
-                                            Content="启动游戏"
-                                            materialDesign:ButtonAssist.CornerRadius="10"
-                                            Height="36">
-                                        <Button.Style>
-                                            <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsRunning}" Value="True">
-                                                        <Setter Property="Content" Value="游戏中……" />
-                                                        <Setter Property="IsEnabled" Value="False" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Button.Style>
-                                    </Button>
-                                </StackPanel>
+                            <!-- Game Name -->
+                            <TextBlock Text="游戏名称"
+                                       Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                       FontSize="12"
+                                       FontWeight="Medium" />
+                            <TextBlock Text="{Binding SelectedGame.Name}"
+                                       Foreground="{DynamicResource MaterialDesignBody}"
+                                       FontSize="17"
+                                       FontWeight="Bold"
+                                       TextTrimming="CharacterEllipsis"
+                                       Margin="0,4,0,16" />
+
+                            <!-- Path -->
+                            <TextBlock Text="所在路径"
+                                       Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                       FontSize="12"
+                                       FontWeight="Medium" />
+                            <DockPanel Margin="0,4,0,16">
+                                <TextBlock Text="{Binding SelectedGame.ExecutablePath}"
+                                           Foreground="{DynamicResource MaterialDesignBody}"
+                                           FontSize="12"
+                                           TextWrapping="Wrap"
+                                           TextTrimming="CharacterEllipsis"
+                                           Width="210" />
+                                <Button Command="{Binding SelectedGame.OpenFolderCommand}"
+                                        Style="{StaticResource MaterialDesignFlatButton}"
+                                        Content="打开"
+                                        Width="72"
+                                        Height="32"
+                                        Margin="8,0,0,0"
+                                        materialDesign:ButtonAssist.CornerRadius="8" />
                             </DockPanel>
-                        </materialDesign:Card>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </ScrollViewer>
 
-        <!-- Detail Panel -->
-        <materialDesign:Card Grid.Row="1" Grid.Column="1"
-                             Margin="8,4,16,16"
-                             Padding="22"
-                             UniformCornerRadius="16"
-                             Background="{DynamicResource MaterialDesignCardBackground}"
-                             materialDesign:ElevationAssist.Elevation="Dp4"
-                             Visibility="{Binding IsGameSelected, Converter={StaticResource BoolToVisibility}}">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel>
-                    <!-- Detail Header -->
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-                        <materialDesign:PackIcon Kind="InformationOutline"
-                                                 Width="24" Height="24"
-                                                 VerticalAlignment="Center"
-                                                 Foreground="{DynamicResource PrimaryHueMidBrush}" />
-                        <TextBlock Text="游戏详情"
-                                   FontSize="22"
-                                   FontWeight="Bold"
-                                   Foreground="{DynamicResource MaterialDesignBody}"
-                                   Margin="8,0,0,0"
-                                   VerticalAlignment="Center" />
-                    </StackPanel>
-
-                    <Separator Margin="0,0,0,16"
-                               Background="{DynamicResource MaterialDesignDivider}" />
-
-                    <!-- Game Name -->
-                    <TextBlock Text="游戏名称"
-                               Foreground="{DynamicResource MaterialDesignBodyLight}"
-                               FontSize="12"
-                               FontWeight="Medium" />
-                    <TextBlock Text="{Binding SelectedGame.Name}"
-                               Foreground="{DynamicResource MaterialDesignBody}"
-                               FontSize="17"
-                               FontWeight="Bold"
-                               TextTrimming="CharacterEllipsis"
-                               Margin="0,4,0,16" />
-
-                    <!-- Path -->
-                    <TextBlock Text="所在路径"
-                               Foreground="{DynamicResource MaterialDesignBodyLight}"
-                               FontSize="12"
-                               FontWeight="Medium" />
-                    <DockPanel Margin="0,4,0,16">
-                        <TextBlock Text="{Binding SelectedGame.ExecutablePath}"
-                                   Foreground="{DynamicResource MaterialDesignBody}"
-                                   FontSize="12"
-                                   TextWrapping="Wrap"
-                                   TextTrimming="CharacterEllipsis"
-                                   Width="210" />
-                        <Button Command="{Binding SelectedGame.OpenFolderCommand}"
-                                Style="{StaticResource MaterialDesignFlatButton}"
-                                Content="打开"
-                                Width="72"
-                                Height="32"
-                                Margin="8,0,0,0"
-                                materialDesign:ButtonAssist.CornerRadius="8" />
-                    </DockPanel>
-
-                    <!-- Play Time -->
-                    <TextBlock Text="累计时长"
-                               Foreground="{DynamicResource MaterialDesignBodyLight}"
-                               FontSize="12"
-                               FontWeight="Medium" />
-                    <StackPanel Orientation="Horizontal" Margin="0,4,0,16">
-                        <materialDesign:PackIcon Kind="ClockOutline"
-                                                 Width="18" Height="18"
-                                                 VerticalAlignment="Center"
-                                                 Foreground="{DynamicResource PrimaryHueMidBrush}"
-                                                 Margin="0,0,6,0" />
-                        <TextBlock Text="{Binding SelectedGame.CurrentSessionDisplay}"
-                                   Foreground="{DynamicResource MaterialDesignBody}"
-                                   FontSize="17"
-                                   FontWeight="Bold"
-                                   VerticalAlignment="Center" />
-                    </StackPanel>
-
-                    <!-- Last Played -->
-                    <TextBlock Text="最后运行日期"
-                               Foreground="{DynamicResource MaterialDesignBodyLight}"
-                               FontSize="12"
-                               FontWeight="Medium" />
-                    <StackPanel Orientation="Horizontal" Margin="0,4,0,24">
-                        <materialDesign:PackIcon Kind="CalendarClock"
-                                                 Width="18" Height="18"
-                                                 VerticalAlignment="Center"
-                                                 Foreground="{DynamicResource PrimaryHueMidBrush}"
-                                                 Margin="0,0,6,0" />
-                        <TextBlock Text="{Binding SelectedGame.LastPlayedDisplay}"
-                                   Foreground="{DynamicResource MaterialDesignBody}"
-                                   FontSize="17"
-                                   FontWeight="Bold"
-                                   VerticalAlignment="Center" />
-                    </StackPanel>
-
-                    <Separator Margin="0,0,0,16"
-                               Background="{DynamicResource MaterialDesignDivider}" />
-
-                    <!-- Actions -->
-                    <TextBlock Text="操作"
-                               Foreground="{DynamicResource MaterialDesignBodyLight}"
-                               FontSize="12"
-                               FontWeight="Medium"
-                               Margin="0,0,0,10" />
-                    <StackPanel Orientation="Vertical">
-                        <Button Command="{Binding SelectedGame.RenameCommand}"
-                                Style="{StaticResource MaterialDesignRaisedButton}"
-                                materialDesign:ButtonAssist.CornerRadius="10"
-                                Height="38"
-                                Margin="0,0,0,8">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Pencil" Width="18" Height="18" VerticalAlignment="Center" />
-                                <TextBlock Text="重命名" Margin="8,0,0,0" VerticalAlignment="Center" />
+                            <!-- Play Time -->
+                            <TextBlock Text="累计时长"
+                                       Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                       FontSize="12"
+                                       FontWeight="Medium" />
+                            <StackPanel Orientation="Horizontal" Margin="0,4,0,16">
+                                <materialDesign:PackIcon Kind="ClockOutline"
+                                                         Width="18" Height="18"
+                                                         VerticalAlignment="Center"
+                                                         Foreground="{DynamicResource PrimaryHueMidBrush}"
+                                                         Margin="0,0,6,0" />
+                                <TextBlock Text="{Binding SelectedGame.CurrentSessionDisplay}"
+                                           Foreground="{DynamicResource MaterialDesignBody}"
+                                           FontSize="17"
+                                           FontWeight="Bold"
+                                           VerticalAlignment="Center" />
                             </StackPanel>
-                        </Button>
-                        <Button Command="{Binding SelectedGame.ChangeCoverCommand}"
-                                Style="{StaticResource MaterialDesignRaisedButton}"
-                                materialDesign:ButtonAssist.CornerRadius="10"
-                                Height="38"
-                                Margin="0,0,0,8">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="ImageEdit" Width="18" Height="18" VerticalAlignment="Center" />
-                                <TextBlock Text="更改封面" Margin="8,0,0,0" VerticalAlignment="Center" />
+
+                            <!-- Last Played -->
+                            <TextBlock Text="最后运行日期"
+                                       Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                       FontSize="12"
+                                       FontWeight="Medium" />
+                            <StackPanel Orientation="Horizontal" Margin="0,4,0,24">
+                                <materialDesign:PackIcon Kind="CalendarClock"
+                                                         Width="18" Height="18"
+                                                         VerticalAlignment="Center"
+                                                         Foreground="{DynamicResource PrimaryHueMidBrush}"
+                                                         Margin="0,0,6,0" />
+                                <TextBlock Text="{Binding SelectedGame.LastPlayedDisplay}"
+                                           Foreground="{DynamicResource MaterialDesignBody}"
+                                           FontSize="17"
+                                           FontWeight="Bold"
+                                           VerticalAlignment="Center" />
                             </StackPanel>
-                        </Button>
-                        <Button Command="{Binding SelectedGame.DeleteCommand}"
-                                Style="{StaticResource MaterialDesignRaisedButton}"
-                                materialDesign:ButtonAssist.CornerRadius="10"
-                                Height="38"
-                                Background="#FFEF5350"
-                                BorderBrush="#FFEF5350"
-                                Foreground="White"
-                                Margin="0,4,0,0">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Delete" Width="18" Height="18" VerticalAlignment="Center" />
-                                <TextBlock Text="删除游戏" Margin="8,0,0,0" VerticalAlignment="Center" />
+
+                            <Separator Margin="0,0,0,16"
+                                       Background="{DynamicResource MaterialDesignDivider}" />
+
+                            <!-- Actions -->
+                            <TextBlock Text="操作"
+                                       Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                       FontSize="12"
+                                       FontWeight="Medium"
+                                       Margin="0,0,0,10" />
+                            <StackPanel Orientation="Vertical">
+                                <Button Command="{Binding SelectedGame.RenameCommand}"
+                                        Style="{StaticResource MaterialDesignRaisedButton}"
+                                        materialDesign:ButtonAssist.CornerRadius="10"
+                                        Height="38"
+                                        Margin="0,0,0,8">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Pencil" Width="18" Height="18" VerticalAlignment="Center" />
+                                        <TextBlock Text="重命名" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding SelectedGame.ChangeCoverCommand}"
+                                        Style="{StaticResource MaterialDesignRaisedButton}"
+                                        materialDesign:ButtonAssist.CornerRadius="10"
+                                        Height="38"
+                                        Margin="0,0,0,8">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="ImageEdit" Width="18" Height="18" VerticalAlignment="Center" />
+                                        <TextBlock Text="更改封面" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding SelectedGame.DeleteCommand}"
+                                        Style="{StaticResource MaterialDesignRaisedButton}"
+                                        materialDesign:ButtonAssist.CornerRadius="10"
+                                        Height="38"
+                                        Background="#FFEF5350"
+                                        BorderBrush="#FFEF5350"
+                                        Foreground="White"
+                                        Margin="0,4,0,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Delete" Width="18" Height="18" VerticalAlignment="Center" />
+                                        <TextBlock Text="删除游戏" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
                             </StackPanel>
-                        </Button>
-                    </StackPanel>
-                </StackPanel>
-            </ScrollViewer>
-        </materialDesign:Card>
+                        </StackPanel>
+                    </ScrollViewer>
+                </materialDesign:Card>
+            </Grid>
+        </Border>
     </Grid>
 </Window>
