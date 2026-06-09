@@ -60,3 +60,7 @@ C:\Users\STarry\Desktop\game_mananger\Game_Manager\obj\Release\net8.0-windows\re
 C:\Users\STarry\Desktop\game_mananger\Game_Manager\obj\Release\net8.0-windows\Views\RenameWindow.baml
 C:\Users\STarry\Desktop\game_mananger\Game_Manager\obj\Release\net8.0-windows\Views\RenameWindow.g.cs
 C:\Users\STarry\Desktop\game_mananger\Game_Manager\obj\Release\net8.0-windows\Game_Manager.sourcelink.json
+C:\Users\STarry\Desktop\game_mananger\Game_Manager\bin\Release\net8.0-windows\MaterialDesignColors.dll
+C:\Users\STarry\Desktop\game_mananger\Game_Manager\bin\Release\net8.0-windows\MaterialDesignThemes.Wpf.dll
+C:\Users\STarry\Desktop\game_mananger\Game_Manager\bin\Release\net8.0-windows\Microsoft.Xaml.Behaviors.dll
+C:\Users\STarry\Desktop\game_mananger\Game_Manager\obj\Release\net8.0-windows\Game_Manager_Content.g.cs

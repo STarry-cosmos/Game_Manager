@@ -9,6 +9,7 @@ namespace Game_Manager.Models
         public long CurrentSessionTimeSeconds { get; set; }
         public bool IsRunning { get; set; }
         public string? CoverImagePath { get; set; }
+        public DateTime? LastPlayedDate { get; set; }
 
         public GameModel()
         {
@@ -23,6 +24,7 @@ namespace Game_Manager.Models
             CurrentSessionTimeSeconds = record.CurrentSessionTime;
             IsRunning = record.IsRunning;
             CoverImagePath = record.CoverImagePath;
+            LastPlayedDate = record.LastPlayed;
         }
     }
 }

@@ -56,6 +56,15 @@ namespace Game_Manager.ViewModels
 
         public string CurrentSessionDisplay => TimeSpan.FromSeconds(_currentSessionSeconds).ToString(@"hh\:mm\:ss");
 
+        public string LastPlayedDisplay
+        {
+            get
+            {
+                var date = _model.LastPlayedDate;
+                return date.HasValue ? date.Value.ToString("yyyy.MM.dd") : "未运行";
+            }
+        }
+
         public ICommand PlayCommand { get; }
 
         public GameItemViewModel(GameModel model, ProcessMonitorService monitor, IDatabaseManager db)
@@ -197,6 +206,7 @@ namespace Game_Manager.ViewModels
             {
                 _model.TotalPlayTimeSeconds = record.TotalPlayTime;
                 _model.CurrentSessionTimeSeconds = record.CurrentSessionTime;
+                _model.LastPlayedDate = record.LastPlayed;
             }
             var disp = System.Windows.Application.Current?.Dispatcher;
             if (disp != null)
@@ -210,6 +220,7 @@ namespace Game_Manager.ViewModels
                     try { _uiTimer.Stop(); } catch { }
                     (PlayCommand as RelayCommand)?.NotifyCanExecuteChanged();
                     OnPropertyChanged(nameof(CurrentSessionDisplay));
+                    OnPropertyChanged(nameof(LastPlayedDisplay));
                     OnPropertyChanged(nameof(ButtonText));
                 });
             }
@@ -222,6 +233,7 @@ namespace Game_Manager.ViewModels
                 try { _uiTimer.Stop(); } catch { }
                 (PlayCommand as RelayCommand)?.NotifyCanExecuteChanged();
                 OnPropertyChanged(nameof(CurrentSessionDisplay));
+                OnPropertyChanged(nameof(LastPlayedDisplay));
                 OnPropertyChanged(nameof(ButtonText));
             }
         }

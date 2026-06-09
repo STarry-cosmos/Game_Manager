@@ -1,12 +1,15 @@
 {
   "version": 2,
-  "dgSpecHash": "CmCzWwl+TPk=",
+  "dgSpecHash": "fIaDjzj55Zk=",
   "success": true,
   "projectFilePath": "C:\\Users\\STarry\\Desktop\\game_mananger\\Game_Manager\\Game_Manager.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\STarry\\.nuget\\packages\\communitytoolkit.mvvm\\8.4.1\\communitytoolkit.mvvm.8.4.1.nupkg.sha512",
+    "C:\\Users\\STarry\\.nuget\\packages\\materialdesigncolors\\5.3.2\\materialdesigncolors.5.3.2.nupkg.sha512",
+    "C:\\Users\\STarry\\.nuget\\packages\\materialdesignthemes\\5.3.2\\materialdesignthemes.5.3.2.nupkg.sha512",
     "C:\\Users\\STarry\\.nuget\\packages\\microsoft.net.illink.tasks\\8.0.15\\microsoft.net.illink.tasks.8.0.15.nupkg.sha512",
     "C:\\Users\\STarry\\.nuget\\packages\\microsoft.win32.systemevents\\7.0.0\\microsoft.win32.systemevents.7.0.0.nupkg.sha512",
+    "C:\\Users\\STarry\\.nuget\\packages\\microsoft.xaml.behaviors.wpf\\1.1.77\\microsoft.xaml.behaviors.wpf.1.1.77.nupkg.sha512",
     "C:\\Users\\STarry\\.nuget\\packages\\sourcegear.sqlite3\\3.50.4.5\\sourcegear.sqlite3.3.50.4.5.nupkg.sha512",
     "C:\\Users\\STarry\\.nuget\\packages\\sqlitepclraw.bundle_e_sqlite3\\3.0.3\\sqlitepclraw.bundle_e_sqlite3.3.0.3.nupkg.sha512",
     "C:\\Users\\STarry\\.nuget\\packages\\sqlitepclraw.config.e_sqlite3\\3.0.3\\sqlitepclraw.config.e_sqlite3.3.0.3.nupkg.sha512",

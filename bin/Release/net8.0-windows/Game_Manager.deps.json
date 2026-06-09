@@ -9,6 +9,8 @@
       "Game_Manager/1.0.0": {
         "dependencies": {
           "CommunityToolkit.Mvvm": "8.4.1",
+          "MaterialDesignColors": "5.3.2",
+          "MaterialDesignThemes": "5.3.2",
           "SQLitePCLRaw.bundle_e_sqlite3": "3.0.3",
           "System.Data.SQLite": "2.0.3",
           "System.Drawing.Common": "7.0.0"
@@ -25,7 +27,35 @@
           }
         }
       },
+      "MaterialDesignColors/5.3.2": {
+        "runtime": {
+          "lib/net8.0-windows7.0/MaterialDesignColors.dll": {
+            "assemblyVersion": "5.3.2.0",
+            "fileVersion": "5.3.2.0"
+          }
+        }
+      },
+      "MaterialDesignThemes/5.3.2": {
+        "dependencies": {
+          "MaterialDesignColors": "5.3.2",
+          "Microsoft.Xaml.Behaviors.Wpf": "1.1.77"
+        },
+        "runtime": {
+          "lib/net8.0-windows7.0/MaterialDesignThemes.Wpf.dll": {
+            "assemblyVersion": "5.3.2.0",
+            "fileVersion": "5.3.2.0"
+          }
+        }
+      },
       "Microsoft.Win32.SystemEvents/7.0.0": {},
+      "Microsoft.Xaml.Behaviors.Wpf/1.1.77": {
+        "runtime": {
+          "lib/net6.0-windows7.0/Microsoft.Xaml.Behaviors.dll": {
+            "assemblyVersion": "1.1.0.0",
+            "fileVersion": "1.1.77.27830"
+          }
+        }
+      },
       "SourceGear.sqlite3/3.50.4.5": {
         "runtimeTargets": {
           "runtimes/android-arm/native/libe_sqlite3.so": {
@@ -249,12 +279,33 @@
       "path": "communitytoolkit.mvvm/8.4.1",
       "hashPath": "communitytoolkit.mvvm.8.4.1.nupkg.sha512"
     },
+    "MaterialDesignColors/5.3.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-ru09iYhsnGcTI/La30zuzSeg/DXwvdFgDfvG17XU+/+XkIY915YiQFStZlykui5vpWzMEtyADh2c2T7CodrGrg==",
+      "path": "materialdesigncolors/5.3.2",
+      "hashPath": "materialdesigncolors.5.3.2.nupkg.sha512"
+    },
+    "MaterialDesignThemes/5.3.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-G/aQKjpxcwQt7aZ3JzGX64gr1CzsJK7vtm+l57zpejCs6GebWN4MZ536PHLWpyrgrLySrKxPSjSlWCw2A1HWig==",
+      "path": "materialdesignthemes/5.3.2",
+      "hashPath": "materialdesignthemes.5.3.2.nupkg.sha512"
+    },
     "Microsoft.Win32.SystemEvents/7.0.0": {
       "type": "package",
       "serviceable": true,
       "sha512": "sha512-2nXPrhdAyAzir0gLl8Yy8S5Mnm/uBSQQA7jEsILOS1MTyS7DbmV1NgViMtvV1sfCD1ebITpNwb1NIinKeJgUVQ==",
       "path": "microsoft.win32.systemevents/7.0.0",
       "hashPath": "microsoft.win32.systemevents.7.0.0.nupkg.sha512"
+    },
+    "Microsoft.Xaml.Behaviors.Wpf/1.1.77": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-MCu674ZETgU18EbxfwIlRpUPJ02YbZenLsMCXTkpeA7KUBpXfFaOUDlEO+7UWu5AFnUoydg+aQENJkuaZPheMQ==",
+      "path": "microsoft.xaml.behaviors.wpf/1.1.77",
+      "hashPath": "microsoft.xaml.behaviors.wpf.1.1.77.nupkg.sha512"
     },
     "SourceGear.sqlite3/3.50.4.5": {
       "type": "package",
