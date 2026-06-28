@@ -33,7 +33,16 @@ namespace Game_Manager.ViewModels
                 OnPropertyChanged(nameof(Name));
             }
         }
-        public string ExecutablePath => _model.ExecutablePath;
+        public string ExecutablePath
+        {
+            get => _model.ExecutablePath;
+            private set
+            {
+                if (_model.ExecutablePath == value) return;
+                _model.ExecutablePath = value;
+                OnPropertyChanged(nameof(ExecutablePath));
+            }
+        }
 
         public bool IsRunning
         {
@@ -50,6 +59,7 @@ namespace Game_Manager.ViewModels
         public ICommand DeleteCommand { get; }
         public ICommand RenameCommand { get; }
         public ICommand OpenFolderCommand { get; }
+        public ICommand ChangePathCommand { get; }
 
         public event Action<GameItemViewModel>? Deleted;
         public string ButtonText => IsRunning ? "游戏中……" : "启动游戏";
@@ -86,6 +96,7 @@ namespace Game_Manager.ViewModels
             DeleteCommand = new RelayCommand(ExecuteDeleteCommand);
             RenameCommand = new RelayCommand(ExecuteRenameCommand);
             OpenFolderCommand = new RelayCommand(ExecuteOpenFolder);
+            ChangePathCommand = new RelayCommand(ExecuteChangePath);
 
             _uiTimer = new DispatcherTimer(DispatcherPriority.Normal)
             {
@@ -376,6 +387,47 @@ namespace Game_Manager.ViewModels
             {
                 System.Diagnostics.Debug.WriteLine($"OpenFolder failed: {ex}");
                 System.Windows.MessageBox.Show($"打开文件夹失败：{ex.Message}", "错误", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+        }
+
+        private void ExecuteChangePath()
+        {
+            try
+            {
+                var dialog = new Microsoft.Win32.OpenFileDialog
+                {
+                    Filter = "Executable Files (*.exe)|*.exe|All Files (*.*)|*.*",
+                    Title = "选择新的游戏可执行文件"
+                };
+
+                if (dialog.ShowDialog() != true)
+                {
+                    return;
+                }
+
+                var selectedPath = dialog.FileName;
+                if (string.IsNullOrWhiteSpace(selectedPath) || !System.IO.File.Exists(selectedPath))
+                {
+                    return;
+                }
+
+                var rec = _db.GetGameById(Id);
+                if (rec == null)
+                {
+                    return;
+                }
+
+                rec.ExecutablePath = selectedPath;
+                if (_db.UpdateGame(rec))
+                {
+                    ExecutablePath = selectedPath;
+                    LoadCover();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"ChangePath failed: {ex}");
+                System.Windows.MessageBox.Show($"修改路径失败：{ex.Message}", "错误", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
         }
 

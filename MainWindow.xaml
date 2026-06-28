@@ -9,6 +9,7 @@
         Title="Game Manager"
         Height="800" Width="1200"
         WindowStyle="None"
+        WindowStartupLocation="CenterScreen"
         AllowsTransparency="True"
         Background="Transparent"
         Style="{StaticResource MaterialDesignWindow}"
@@ -27,11 +28,13 @@
         <WindowChrome CaptionHeight="0"
                       ResizeBorderThickness="6"
                       GlassFrameThickness="0"
-                      CornerRadius="0" />
+                      CornerRadius="0" 
+                      
+                      />
     </WindowChrome.WindowChrome>
 
     <!-- Outer container with padding for shadow -->
-    <Grid Margin="10">
+    <Grid x:Name="RootGrid" Margin="10">
         <!-- Shadow + rounded corners -->
         <Border CornerRadius="12"
                 Background="{DynamicResource MaterialDesignPaper}">
@@ -54,13 +57,12 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="380" />
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="357" />
                 </Grid.ColumnDefinitions>
 
                 <!-- Custom Title Bar -->
                 <Grid Grid.Row="0" Grid.ColumnSpan="2"
-                      Height="36"
                       Background="{DynamicResource MaterialDesignToolBarBackground}"
                       MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
                     <DockPanel LastChildFill="False">
@@ -185,7 +187,7 @@
                               VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled"
                               Padding="8,4"
-                              materialDesign:ScrollViewerAssist.BubbleVerticalScroll="True">
+                              materialDesign:ScrollViewerAssist.BubbleVerticalScroll="True" Grid.ColumnSpan="2" Margin="0,0,348,0">
                     <ItemsControl ItemsSource="{Binding Games}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -350,21 +352,27 @@
                                        Foreground="{DynamicResource MaterialDesignBodyLight}"
                                        FontSize="12"
                                        FontWeight="Medium" />
-                            <DockPanel Margin="0,4,0,16">
-                                <TextBlock Text="{Binding SelectedGame.ExecutablePath}"
-                                           Foreground="{DynamicResource MaterialDesignBody}"
-                                           FontSize="12"
-                                           TextWrapping="Wrap"
-                                           TextTrimming="CharacterEllipsis"
-                                           Width="210" />
+                            <TextBlock Text="{Binding SelectedGame.ExecutablePath}"
+                                       Foreground="{DynamicResource MaterialDesignBody}"
+                                       FontSize="12"
+                                       TextWrapping="Wrap"
+                                       Margin="0,4,0,8" />
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
                                 <Button Command="{Binding SelectedGame.OpenFolderCommand}"
                                         Style="{StaticResource MaterialDesignFlatButton}"
                                         Content="打开"
-                                        Width="72"
+                                        Width="64"
                                         Height="32"
-                                        Margin="8,0,0,0"
+                                        Margin="0,0,8,0"
                                         materialDesign:ButtonAssist.CornerRadius="8" />
-                            </DockPanel>
+
+                                <Button Command="{Binding SelectedGame.ChangePathCommand}"
+                                        Style="{StaticResource MaterialDesignFlatButton}"
+                                        Content="修改"
+                                        Width="64"
+                                        Height="32"
+                                        materialDesign:ButtonAssist.CornerRadius="8" />
+                            </StackPanel>
 
                             <!-- Play Time -->
                             <TextBlock Text="累计时长"
@@ -412,6 +420,16 @@
                                        FontWeight="Medium"
                                        Margin="0,0,0,10" />
                             <StackPanel Orientation="Vertical">
+                                <Button Command="{Binding SelectedGame.PlayCommand}"
+                                        Style="{StaticResource MaterialDesignRaisedButton}"
+                                        materialDesign:ButtonAssist.CornerRadius="10"
+                                        Height="38"
+                                        Margin="0,0,0,8">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Play" Width="18" Height="18" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding SelectedGame.ButtonText}" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
                                 <Button Command="{Binding SelectedGame.RenameCommand}"
                                         Style="{StaticResource MaterialDesignRaisedButton}"
                                         materialDesign:ButtonAssist.CornerRadius="10"

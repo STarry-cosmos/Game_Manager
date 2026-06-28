@@ -3,6 +3,10 @@
   "WorkspaceRootPath": "C:\\Users\\STarry\\Desktop\\game_mananger\\Game_Manager\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{DDE378E3-DDBD-4C35-93C7-1B8E023FA625}|Game_Manager.csproj|c:\\users\\starry\\desktop\\game_mananger\\game_manager\\readme.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
+      "RelativeMoniker": "D:0:0:{DDE378E3-DDBD-4C35-93C7-1B8E023FA625}|Game_Manager.csproj|solutionrelative:readme.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{DDE378E3-DDBD-4C35-93C7-1B8E023FA625}|Game_Manager.csproj|c:\\users\\starry\\desktop\\game_mananger\\game_manager\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
       "RelativeMoniker": "D:0:0:{DDE378E3-DDBD-4C35-93C7-1B8E023FA625}|Game_Manager.csproj|solutionrelative:mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
     },
@@ -22,15 +26,28 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 1,
+          "SelectedChildIndex": 0,
           "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "README.md",
+              "DocumentMoniker": "C:\\Users\\STarry\\Desktop\\game_mananger\\Game_Manager\\README.md",
+              "RelativeDocumentMoniker": "README.md",
+              "ToolTip": "C:\\Users\\STarry\\Desktop\\game_mananger\\Game_Manager\\README.md",
+              "RelativeToolTip": "README.md",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAAAkAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
+              "WhenOpened": "2026-06-12T08:44:40.402Z",
+              "EditorCaption": ""
+            },
             {
               "$type": "Bookmark",
               "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "MainWindow.xaml",
               "DocumentMoniker": "C:\\Users\\STarry\\Desktop\\game_mananger\\Game_Manager\\MainWindow.xaml",
               "RelativeDocumentMoniker": "MainWindow.xaml",
@@ -42,19 +59,18 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "RenameWindow.xaml",
               "DocumentMoniker": "C:\\Users\\STarry\\Desktop\\game_mananger\\Game_Manager\\Views\\RenameWindow.xaml",
               "RelativeDocumentMoniker": "Views\\RenameWindow.xaml",
               "ToolTip": "C:\\Users\\STarry\\Desktop\\game_mananger\\Game_Manager\\Views\\RenameWindow.xaml",
               "RelativeToolTip": "Views\\RenameWindow.xaml",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2026-05-28T15:14:56.462Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-28T15:14:56.462Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "MainWindow.xaml.cs",
               "DocumentMoniker": "C:\\Users\\STarry\\Desktop\\game_mananger\\Game_Manager\\MainWindow.xaml.cs",
               "RelativeDocumentMoniker": "MainWindow.xaml.cs",
@@ -62,8 +78,7 @@
               "RelativeToolTip": "MainWindow.xaml.cs",
               "ViewState": "AgIAAGwAAAAAAAAAAIA/wGwAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-28T08:10:56.132Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-28T08:10:56.132Z"
             }
           ]
         }
