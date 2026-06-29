@@ -56,6 +56,19 @@ namespace Game_Manager.ViewModels
             }
         }
 
+        public int SortOrder
+        {
+            get => _model.SortOrder;
+            private set
+            {
+                if (_model.SortOrder == value) return;
+                _model.SortOrder = value;
+                OnPropertyChanged(nameof(SortOrder));
+            }
+        }
+
+        public DateTime? LastPlayedDate => _model.LastPlayedDate;
+
         public ICommand DeleteCommand { get; }
         public ICommand RenameCommand { get; }
         public ICommand OpenFolderCommand { get; }
@@ -63,6 +76,8 @@ namespace Game_Manager.ViewModels
 
         public event Action<GameItemViewModel>? Deleted;
         public string ButtonText => IsRunning ? "游戏中……" : "启动游戏";
+
+        public long TotalPlayTimeSeconds => _totalPlaySeconds + (IsRunning && _sessionStartUtc.HasValue ? (long)(DateTime.UtcNow - _sessionStartUtc.Value).TotalSeconds : 0);
 
         public string CurrentSessionDisplay => TimeSpan.FromSeconds(_currentSessionSeconds).ToString(@"hh\:mm\:ss");
 
@@ -76,6 +91,20 @@ namespace Game_Manager.ViewModels
         }
 
         public ICommand PlayCommand { get; }
+
+        private bool _isDropTarget;
+        public bool IsDropTarget
+        {
+            get => _isDropTarget;
+            set
+            {
+                if (_isDropTarget == value) return;
+                _isDropTarget = value;
+                OnPropertyChanged(nameof(IsDropTarget));
+            }
+        }
+
+        public void SetSortOrder(int sortOrder) => SortOrder = sortOrder;
 
         public GameItemViewModel(GameModel model, ProcessMonitorService monitor, IDatabaseManager db)
         {

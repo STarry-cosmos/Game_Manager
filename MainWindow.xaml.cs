@@ -21,6 +21,12 @@ namespace Game_Manager
     /// </summary>
     public partial class MainWindow : Window
     {
+        private GameItemViewModel? _draggedGame;
+        private FrameworkElement? _draggedElement;
+        private Point _dragStartPoint;
+        private bool _isDragging;
+        private GameItemViewModel? _dragTargetGame;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -178,6 +184,135 @@ namespace Game_Manager
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
             Close();
+        }
+
+        private void Card_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (DataContext is not MainViewModel viewModel || !viewModel.IsCustomSortMode)
+            {
+                return;
+            }
+
+            if (sender is FrameworkElement element && element.DataContext is GameItemViewModel game)
+            {
+                _draggedGame = game;
+                _draggedElement = element;
+                _dragTargetGame = null;
+                _isDragging = false;
+                _dragStartPoint = e.GetPosition(element);
+                element.CaptureMouse();
+                element.Opacity = 0.9;
+                element.RenderTransformOrigin = new Point(0.5, 0.5);
+                element.RenderTransform = new TransformGroup
+                {
+                    Children =
+                    {
+                        new ScaleTransform(1.03, 1.03),
+                        new TranslateTransform(0, 0)
+                    }
+                };
+                element.SetValue(Panel.ZIndexProperty, 20);
+                e.Handled = true;
+            }
+        }
+
+        private void Card_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (_draggedGame == null || _draggedElement == null || e.LeftButton != MouseButtonState.Pressed)
+            {
+                return;
+            }
+
+            if (sender is not FrameworkElement element || element != _draggedElement)
+            {
+                return;
+            }
+
+            var delta = e.GetPosition(element) - _dragStartPoint;
+            if (!_isDragging && Math.Abs(delta.X) < 3 && Math.Abs(delta.Y) < 3)
+            {
+                return;
+            }
+
+            _isDragging = true;
+            element.Opacity = 0.75;
+            var transformGroup = new TransformGroup();
+            transformGroup.Children.Add(new ScaleTransform(1.05, 1.05));
+            transformGroup.Children.Add(new TranslateTransform(delta.X, delta.Y));
+            element.RenderTransform = transformGroup;
+
+            if (DataContext is MainViewModel viewModel)
+            {
+                var mousePosition = e.GetPosition(this);
+                var hitResult = VisualTreeHelper.HitTest(this, mousePosition);
+                var targetElement = FindGameCardElement(hitResult?.VisualHit as DependencyObject);
+                if (targetElement?.DataContext is GameItemViewModel targetGame && targetGame != _draggedGame)
+                {
+                    if (_dragTargetGame != targetGame)
+                    {
+                        ClearDropTargets(viewModel);
+                        _dragTargetGame = targetGame;
+                        targetGame.IsDropTarget = true;
+                        viewModel.ReorderGames(_draggedGame, targetGame);
+                    }
+                }
+                else if (_dragTargetGame != null)
+                {
+                    ClearDropTargets(viewModel);
+                }
+            }
+
+            e.Handled = true;
+        }
+
+        private void Card_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            FinishDragging();
+            e.Handled = true;
+        }
+
+        private void FinishDragging()
+        {
+            if (_draggedElement != null)
+            {
+                _draggedElement.Opacity = 1.0;
+                _draggedElement.RenderTransform = null;
+                _draggedElement.SetValue(Panel.ZIndexProperty, 0);
+                _draggedElement.ReleaseMouseCapture();
+                _draggedElement = null;
+            }
+
+            if (DataContext is MainViewModel viewModel)
+            {
+                ClearDropTargets(viewModel);
+            }
+
+            _draggedGame = null;
+            _dragTargetGame = null;
+            _isDragging = false;
+        }
+
+        private static FrameworkElement? FindGameCardElement(DependencyObject? source)
+        {
+            while (source != null)
+            {
+                if (source is FrameworkElement element && element.DataContext is GameItemViewModel)
+                {
+                    return element;
+                }
+
+                source = VisualTreeHelper.GetParent(source);
+            }
+
+            return null;
+        }
+
+        private static void ClearDropTargets(MainViewModel viewModel)
+        {
+            foreach (var game in viewModel.Games)
+            {
+                game.IsDropTarget = false;
+            }
         }
 
         private void OnCardClicked(object sender, MouseButtonEventArgs e)

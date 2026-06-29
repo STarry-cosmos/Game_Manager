@@ -18,6 +18,7 @@ namespace Game_Manager.Data
         public bool IsRunning { get; set; }
         public int? ProcessId { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public int SortOrder { get; set; }
     }
 
     public static class DatabaseManager
@@ -57,9 +58,20 @@ CREATE TABLE IF NOT EXISTS Games (
     LastPlayed TEXT,
     IsRunning INTEGER NOT NULL DEFAULT 0,
     ProcessId INTEGER,
-    CreatedAt TEXT NOT NULL
+    CreatedAt TEXT NOT NULL,
+    SortOrder INTEGER NOT NULL DEFAULT 0
 );";
             command.ExecuteNonQuery();
+
+            try
+            {
+                using var alterCommand = connection.CreateCommand();
+                alterCommand.CommandText = "ALTER TABLE Games ADD COLUMN SortOrder INTEGER NOT NULL DEFAULT 0;";
+                alterCommand.ExecuteNonQuery();
+            }
+            catch
+            {
+            }
         }
 
         public static int InsertGame(GameRecord game)
@@ -71,8 +83,8 @@ CREATE TABLE IF NOT EXISTS Games (
 
                 using var command = connection.CreateCommand();
                 command.CommandText = @"
-INSERT INTO Games (Name, ExecutablePath, CoverImagePath, TotalPlayTime, CurrentSessionTime, LastPlayed, IsRunning, ProcessId, CreatedAt)
-VALUES (@Name, @ExecutablePath, @CoverImagePath, @TotalPlayTime, @CurrentSessionTime, @LastPlayed, @IsRunning, @ProcessId, @CreatedAt);";
+INSERT INTO Games (Name, ExecutablePath, CoverImagePath, TotalPlayTime, CurrentSessionTime, LastPlayed, IsRunning, ProcessId, CreatedAt, SortOrder)
+VALUES (@Name, @ExecutablePath, @CoverImagePath, @TotalPlayTime, @CurrentSessionTime, @LastPlayed, @IsRunning, @ProcessId, @CreatedAt, @SortOrder);";
                 command.Parameters.AddWithValue("@Name", game.Name);
                 command.Parameters.AddWithValue("@ExecutablePath", game.ExecutablePath);
                 command.Parameters.AddWithValue("@CoverImagePath", (object?)game.CoverImagePath ?? DBNull.Value);
@@ -82,6 +94,7 @@ VALUES (@Name, @ExecutablePath, @CoverImagePath, @TotalPlayTime, @CurrentSession
                 command.Parameters.AddWithValue("@IsRunning", game.IsRunning ? 1 : 0);
                 command.Parameters.AddWithValue("@ProcessId", (object?)game.ProcessId ?? DBNull.Value);
                 command.Parameters.AddWithValue("@CreatedAt", game.CreatedAt.ToString("o", CultureInfo.InvariantCulture));
+                command.Parameters.AddWithValue("@SortOrder", game.SortOrder);
 
                 command.ExecuteNonQuery();
                 return (int)connection.LastInsertRowId;
@@ -95,7 +108,7 @@ VALUES (@Name, @ExecutablePath, @CoverImagePath, @TotalPlayTime, @CurrentSession
             connection.Open();
 
             using var command = connection.CreateCommand();
-            command.CommandText = @"SELECT Id, Name, ExecutablePath, CoverImagePath, TotalPlayTime, CurrentSessionTime, LastPlayed, IsRunning, ProcessId, CreatedAt FROM Games ORDER BY Name;";
+            command.CommandText = @"SELECT Id, Name, ExecutablePath, CoverImagePath, TotalPlayTime, CurrentSessionTime, LastPlayed, IsRunning, ProcessId, CreatedAt, SortOrder FROM Games ORDER BY SortOrder, Name;";
 
             using var reader = command.ExecuteReader();
             while (reader.Read())
@@ -112,7 +125,7 @@ VALUES (@Name, @ExecutablePath, @CoverImagePath, @TotalPlayTime, @CurrentSession
             connection.Open();
 
             using var command = connection.CreateCommand();
-            command.CommandText = @"SELECT Id, Name, ExecutablePath, CoverImagePath, TotalPlayTime, CurrentSessionTime, LastPlayed, IsRunning, ProcessId, CreatedAt FROM Games WHERE Id = @Id;";
+            command.CommandText = @"SELECT Id, Name, ExecutablePath, CoverImagePath, TotalPlayTime, CurrentSessionTime, LastPlayed, IsRunning, ProcessId, CreatedAt, SortOrder FROM Games WHERE Id = @Id;";
             command.Parameters.AddWithValue("@Id", id);
 
             using var reader = command.ExecuteReader();
@@ -126,7 +139,7 @@ VALUES (@Name, @ExecutablePath, @CoverImagePath, @TotalPlayTime, @CurrentSession
             connection.Open();
 
             using var command = connection.CreateCommand();
-            command.CommandText = @"SELECT Id, Name, ExecutablePath, CoverImagePath, TotalPlayTime, CurrentSessionTime, LastPlayed, IsRunning, ProcessId, CreatedAt FROM Games WHERE IsRunning = 1;";
+            command.CommandText = @"SELECT Id, Name, ExecutablePath, CoverImagePath, TotalPlayTime, CurrentSessionTime, LastPlayed, IsRunning, ProcessId, CreatedAt, SortOrder FROM Games WHERE IsRunning = 1;";
 
             using var reader = command.ExecuteReader();
             while (reader.Read())
@@ -155,7 +168,8 @@ SET Name = @Name,
     LastPlayed = @LastPlayed,
     IsRunning = @IsRunning,
     ProcessId = @ProcessId,
-    CreatedAt = @CreatedAt
+    CreatedAt = @CreatedAt,
+    SortOrder = @SortOrder
 WHERE Id = @Id;";
                 command.Parameters.AddWithValue("@Name", game.Name);
                 command.Parameters.AddWithValue("@ExecutablePath", game.ExecutablePath);
@@ -166,6 +180,7 @@ WHERE Id = @Id;";
                 command.Parameters.AddWithValue("@IsRunning", game.IsRunning ? 1 : 0);
                 command.Parameters.AddWithValue("@ProcessId", (object?)game.ProcessId ?? DBNull.Value);
                 command.Parameters.AddWithValue("@CreatedAt", game.CreatedAt.ToString("o", CultureInfo.InvariantCulture));
+                command.Parameters.AddWithValue("@SortOrder", game.SortOrder);
                 command.Parameters.AddWithValue("@Id", game.Id);
 
                 return command.ExecuteNonQuery() > 0;
@@ -200,7 +215,8 @@ WHERE Id = @Id;";
                 LastPlayed = reader.IsDBNull(6) ? null : DateTime.Parse(reader.GetString(6), null, DateTimeStyles.RoundtripKind),
                 IsRunning = reader.GetInt32(7) == 1,
                 ProcessId = reader.IsDBNull(8) ? null : reader.GetInt32(8),
-                CreatedAt = DateTime.Parse(reader.GetString(9), null, DateTimeStyles.RoundtripKind)
+                CreatedAt = DateTime.Parse(reader.GetString(9), null, DateTimeStyles.RoundtripKind),
+                SortOrder = reader.GetInt32(10)
             };
 
             return game;

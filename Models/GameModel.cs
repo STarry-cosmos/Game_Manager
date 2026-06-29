@@ -10,6 +10,7 @@ namespace Game_Manager.Models
         public bool IsRunning { get; set; }
         public string? CoverImagePath { get; set; }
         public DateTime? LastPlayedDate { get; set; }
+        public int SortOrder { get; set; }
 
         public GameModel()
         {
@@ -25,6 +26,7 @@ namespace Game_Manager.Models
             IsRunning = record.IsRunning;
             CoverImagePath = record.CoverImagePath;
             LastPlayedDate = record.LastPlayed;
+            SortOrder = record.SortOrder;
         }
     }
 }
