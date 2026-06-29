@@ -188,7 +188,7 @@ namespace Game_Manager
 
         private void Card_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (DataContext is not MainViewModel viewModel || !viewModel.IsCustomSortMode)
+            if (DataContext is not MainViewModel viewModel || !viewModel.IsCustomSortMode || !viewModel.IsCustomDragEnabled)
             {
                 return;
             }
@@ -267,8 +267,11 @@ namespace Game_Manager
 
         private void Card_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            FinishDragging();
-            e.Handled = true;
+            if (_draggedGame != null)
+            {
+                FinishDragging();
+                e.Handled = true;
+            }
         }
 
         private void FinishDragging()

@@ -62,6 +62,10 @@ namespace Game_Manager.ViewModels
                 OnPropertyChanged(nameof(IsCustomSortMode));
                 OnPropertyChanged(nameof(IsSortDirectionEnabled));
                 OnPropertyChanged(nameof(SortDirectionLabel));
+                if (!IsCustomSortMode)
+                {
+                    IsCustomDragEnabled = false;
+                }
                 ApplyCurrentSort();
             }
         }
@@ -81,9 +85,23 @@ namespace Game_Manager.ViewModels
             }
         }
 
+        private bool _isCustomDragEnabled;
+        public bool IsCustomDragEnabled
+        {
+            get => _isCustomDragEnabled;
+            set
+            {
+                if (_isCustomDragEnabled == value) return;
+                _isCustomDragEnabled = value;
+                OnPropertyChanged(nameof(IsCustomDragEnabled));
+                OnPropertyChanged(nameof(IsSortDirectionEnabled));
+                OnPropertyChanged(nameof(SortDirectionLabel));
+            }
+        }
+
         public bool IsCustomSortMode => SelectedSortIndex == (int)GameSortMode.Custom;
-        public bool IsSortDirectionEnabled => !IsCustomSortMode;
-        public string SortDirectionLabel => IsAscending ? "升序" : "降序";
+        public bool IsSortDirectionEnabled => true;
+        public string SortDirectionLabel => IsCustomSortMode ? (IsCustomDragEnabled ? "手动中" : "手动") : (IsAscending ? "升序" : "降序");
 
         private readonly ProcessMonitorService _monitorService;
         private readonly IDatabaseManager _dbAdapter;
@@ -196,6 +214,7 @@ namespace Game_Manager.ViewModels
         {
             if (IsCustomSortMode)
             {
+                IsCustomDragEnabled = !IsCustomDragEnabled;
                 return;
             }
 
