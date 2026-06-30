@@ -36,7 +36,7 @@ namespace Game_Manager
             ContentBorder.SizeChanged += ContentBorder_SizeChanged;
         }
 
-        private void MainWindow_SourceInitialized(object sender, EventArgs e)
+        private void MainWindow_SourceInitialized(object? sender, EventArgs e)
         {
             if (PresentationSource.FromVisual(this) is HwndSource hwndSource)
             {

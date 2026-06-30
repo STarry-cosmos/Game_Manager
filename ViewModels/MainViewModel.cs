@@ -67,6 +67,7 @@ namespace Game_Manager.ViewModels
                     IsCustomDragEnabled = false;
                 }
                 ApplyCurrentSort();
+                SaveSortSettings();
             }
         }
 
@@ -82,6 +83,7 @@ namespace Game_Manager.ViewModels
                 OnPropertyChanged(nameof(IsSortDirectionEnabled));
                 OnPropertyChanged(nameof(SortDirectionLabel));
                 ApplyCurrentSort();
+                SaveSortSettings();
             }
         }
 
@@ -111,6 +113,7 @@ namespace Game_Manager.ViewModels
             _dbAdapter = new DatabaseManagerAdapter();
             _monitorService = new ProcessMonitorService(_dbAdapter);
 
+            LoadSortSettings();
             RecoverRunningGameStates();
 
             AddGameCommand = new RelayCommand(AddGame);
@@ -130,6 +133,36 @@ namespace Game_Manager.ViewModels
             {
                 System.Diagnostics.Debug.WriteLine($"RecoverRunningGameStates failed: {ex}");
             }
+        }
+
+        private void LoadSortSettings()
+        {
+            try
+            {
+                var settings = AppSettingsManager.LoadSortSettings();
+                _selectedSortIndex = settings.SelectedSortIndex;
+                _isAscending = settings.IsAscending;
+                OnPropertyChanged(nameof(SelectedSortIndex));
+                OnPropertyChanged(nameof(IsAscending));
+                OnPropertyChanged(nameof(IsCustomSortMode));
+                OnPropertyChanged(nameof(SortDirectionLabel));
+                OnPropertyChanged(nameof(IsSortDirectionEnabled));
+            }
+            catch { }
+        }
+
+        private void SaveSortSettings()
+        {
+            try
+            {
+                var settings = new SortSettings
+                {
+                    SelectedSortIndex = SelectedSortIndex,
+                    IsAscending = IsAscending
+                };
+                AppSettingsManager.SaveSortSettings(settings);
+            }
+            catch { }
         }
 
         private void LoadGames()
