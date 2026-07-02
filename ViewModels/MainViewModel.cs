@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -22,6 +23,8 @@ namespace Game_Manager.ViewModels
 
     public partial class MainViewModel : ObservableObject
     {
+        private readonly List<GameItemViewModel> _allGames = new();
+
         public ObservableCollection<GameItemViewModel> Games { get; } = new();
         public ObservableCollection<string> SortOptions { get; } = new()
         {
@@ -104,6 +107,21 @@ namespace Game_Manager.ViewModels
         public bool IsCustomSortMode => SelectedSortIndex == (int)GameSortMode.Custom;
         public bool IsSortDirectionEnabled => true;
         public string SortDirectionLabel => IsCustomSortMode ? (IsCustomDragEnabled ? "手动中" : "手动") : (IsAscending ? "升序" : "降序");
+        public string TotalGameCountDisplay => $"共 {_allGames.Count} 个游戏";
+        public string TotalGameTimeDisplay => $"总游戏时长 {FormatDuration(_allGames.Sum(game => game.TotalPlayTimeSeconds))}";
+
+        private string _searchText = string.Empty;
+        public string SearchText
+        {
+            get => _searchText;
+            set
+            {
+                if (_searchText == value) return;
+                _searchText = value;
+                OnPropertyChanged(nameof(SearchText));
+                ApplyCurrentSort();
+            }
+        }
 
         private readonly ProcessMonitorService _monitorService;
         private readonly IDatabaseManager _dbAdapter;
@@ -173,16 +191,22 @@ namespace Game_Manager.ViewModels
                 var model = new GameModel(record);
                 var item = new GameItemViewModel(model, _monitorService, _dbAdapter);
                 item.Deleted += OnItemDeleted;
+                item.PropertyChanged += OnGamePropertyChanged;
                 items.Add(item);
             }
 
-            Games.Clear();
-            foreach (var item in items)
+            foreach (var game in _allGames)
             {
-                Games.Add(item);
+                game.Deleted -= OnItemDeleted;
+                game.PropertyChanged -= OnGamePropertyChanged;
             }
 
+            _allGames.Clear();
+            _allGames.AddRange(items);
+            Games.Clear();
+
             ApplyCurrentSort();
+            NotifyStatsChanged();
         }
 
         private void AddGame()
@@ -212,7 +236,7 @@ namespace Game_Manager.ViewModels
                 TotalPlayTime = 0,
                 CurrentSessionTime = 0,
                 IsRunning = false,
-                SortOrder = Games.Count + 1
+                SortOrder = _allGames.Count + 1
             };
 
             _dbAdapter.InsertGame(game);
@@ -224,6 +248,8 @@ namespace Game_Manager.ViewModels
             try
             {
                 item.Deleted -= OnItemDeleted;
+                item.PropertyChanged -= OnGamePropertyChanged;
+                _allGames.Remove(item);
                 Games.Remove(item);
                 if (IsCustomSortMode)
                 {
@@ -234,6 +260,8 @@ namespace Game_Manager.ViewModels
                 {
                     SelectedGame = null;
                 }
+
+                NotifyStatsChanged();
             }
             catch { }
         }
@@ -256,22 +284,32 @@ namespace Game_Manager.ViewModels
 
         private void ApplyCurrentSort()
         {
-            if (Games.Count == 0)
-            {
-                return;
-            }
-
-            var sorted = SortGames(Games.ToList());
+            var filtered = FilterGames(_allGames);
+            var sorted = SortGames(filtered);
             Games.Clear();
             foreach (var game in sorted)
             {
                 Games.Add(game);
             }
 
-            if (IsCustomSortMode)
+            if (IsCustomSortMode && string.IsNullOrWhiteSpace(SearchText))
             {
                 PersistCustomOrder();
             }
+        }
+
+        private List<GameItemViewModel> FilterGames(IEnumerable<GameItemViewModel> items)
+        {
+            if (string.IsNullOrWhiteSpace(SearchText))
+            {
+                return items.ToList();
+            }
+
+            var keyword = SearchText.Trim();
+            return items.Where(game =>
+                    game.Name.Contains(keyword, StringComparison.CurrentCultureIgnoreCase) ||
+                    game.ExecutablePath.Contains(keyword, StringComparison.CurrentCultureIgnoreCase))
+                .ToList();
         }
 
         private List<GameItemViewModel> SortGames(IReadOnlyList<GameItemViewModel> items)
@@ -333,7 +371,7 @@ namespace Game_Manager.ViewModels
 
         private void PersistCustomOrder()
         {
-            if (!IsCustomSortMode)
+            if (!IsCustomSortMode || !string.IsNullOrWhiteSpace(SearchText))
             {
                 return;
             }
@@ -378,6 +416,28 @@ namespace Game_Manager.ViewModels
 
             Games.Move(sourceIndex, targetIndex);
             PersistCustomOrder();
+        }
+
+        private void OnGamePropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName is nameof(GameItemViewModel.CurrentSessionDisplay) or nameof(GameItemViewModel.IsRunning))
+            {
+                OnPropertyChanged(nameof(TotalGameTimeDisplay));
+            }
+        }
+
+        private void NotifyStatsChanged()
+        {
+            OnPropertyChanged(nameof(TotalGameCountDisplay));
+            OnPropertyChanged(nameof(TotalGameTimeDisplay));
+        }
+
+        private static string FormatDuration(long totalSeconds)
+        {
+            var duration = TimeSpan.FromSeconds(Math.Max(0, totalSeconds));
+            return duration.TotalHours >= 100
+                ? $"{(long)duration.TotalHours:00}:{duration.Minutes:00}:{duration.Seconds:00}"
+                : duration.ToString(@"hh\:mm\:ss");
         }
     }
 }
