@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
@@ -245,7 +246,8 @@ namespace Game_Manager
             {
                 var mousePosition = e.GetPosition(this);
                 var hitResult = VisualTreeHelper.HitTest(this, mousePosition);
-                var targetElement = FindGameCardElement(hitResult?.VisualHit as DependencyObject);
+                var targetElement = FindGameCardElement(hitResult?.VisualHit as DependencyObject)
+                    ?? FindNearestGameCardElement(mousePosition);
                 if (targetElement?.DataContext is GameItemViewModel targetGame && targetGame != _draggedGame)
                 {
                     if (_dragTargetGame != targetGame)
@@ -253,8 +255,10 @@ namespace Game_Manager
                         ClearDropTargets(viewModel);
                         _dragTargetGame = targetGame;
                         targetGame.IsDropTarget = true;
-                        viewModel.ReorderGames(_draggedGame, targetGame);
                     }
+
+                    var insertAfter = ShouldInsertAfterTarget(targetElement, mousePosition);
+                    viewModel.ReorderGames(_draggedGame, targetGame, insertAfter);
                 }
                 else if (_dragTargetGame != null)
                 {
@@ -299,7 +303,7 @@ namespace Game_Manager
         {
             while (source != null)
             {
-                if (source is FrameworkElement element && element.DataContext is GameItemViewModel)
+                if (source is Card element && element.DataContext is GameItemViewModel)
                 {
                     return element;
                 }
@@ -308,6 +312,87 @@ namespace Game_Manager
             }
 
             return null;
+        }
+
+        private FrameworkElement? FindNearestGameCardElement(Point mousePosition)
+        {
+            FrameworkElement? nearestElement = null;
+            var nearestDistance = double.MaxValue;
+
+            foreach (var element in FindVisualChildren<Card>(GameItemsControl))
+            {
+                if (element.DataContext is not GameItemViewModel game || game == _draggedGame)
+                {
+                    continue;
+                }
+
+                var bounds = GetElementBounds(element);
+                if (bounds == Rect.Empty)
+                {
+                    continue;
+                }
+
+                var horizontalReach = bounds.Width * 0.75;
+                var verticalReach = bounds.Height * 0.35;
+                var interactionBounds = bounds;
+                interactionBounds.Inflate(horizontalReach, verticalReach);
+                if (!interactionBounds.Contains(mousePosition))
+                {
+                    continue;
+                }
+
+                var center = new Point(bounds.Left + bounds.Width / 2, bounds.Top + bounds.Height / 2);
+                var distance = Math.Pow(mousePosition.X - center.X, 2) + Math.Pow(mousePosition.Y - center.Y, 2);
+                if (distance < nearestDistance)
+                {
+                    nearestDistance = distance;
+                    nearestElement = element;
+                }
+            }
+
+            return nearestElement;
+        }
+
+        private bool ShouldInsertAfterTarget(FrameworkElement targetElement, Point mousePosition)
+        {
+            var bounds = GetElementBounds(targetElement);
+            if (bounds == Rect.Empty)
+            {
+                return false;
+            }
+
+            return mousePosition.X >= bounds.Left + bounds.Width / 2;
+        }
+
+        private Rect GetElementBounds(FrameworkElement element)
+        {
+            try
+            {
+                var topLeft = element.TransformToAncestor(this).Transform(new Point(0, 0));
+                return new Rect(topLeft, new Size(element.ActualWidth, element.ActualHeight));
+            }
+            catch
+            {
+                return Rect.Empty;
+            }
+        }
+
+        private static IEnumerable<T> FindVisualChildren<T>(DependencyObject parent) where T : DependencyObject
+        {
+            var count = VisualTreeHelper.GetChildrenCount(parent);
+            for (var index = 0; index < count; index++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, index);
+                if (child is T typedChild)
+                {
+                    yield return typedChild;
+                }
+
+                foreach (var nestedChild in FindVisualChildren<T>(child))
+                {
+                    yield return nestedChild;
+                }
+            }
         }
 
         private static void ClearDropTargets(MainViewModel viewModel)

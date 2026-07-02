@@ -395,7 +395,7 @@ namespace Game_Manager.ViewModels
             }
         }
 
-        public void ReorderGames(GameItemViewModel source, GameItemViewModel target)
+        public void ReorderGames(GameItemViewModel source, GameItemViewModel target, bool insertAfterTarget)
         {
             if (!IsCustomSortMode || source == target)
             {
@@ -409,12 +409,18 @@ namespace Game_Manager.ViewModels
                 return;
             }
 
-            if (sourceIndex < targetIndex)
+            var insertIndex = insertAfterTarget ? targetIndex + 1 : targetIndex;
+            if (sourceIndex < insertIndex)
             {
-                targetIndex--;
+                insertIndex--;
             }
 
-            Games.Move(sourceIndex, targetIndex);
+            if (sourceIndex == insertIndex)
+            {
+                return;
+            }
+
+            Games.Move(sourceIndex, insertIndex);
             PersistCustomOrder();
         }
 

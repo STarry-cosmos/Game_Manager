@@ -278,7 +278,7 @@
                     <ScrollViewer VerticalScrollBarVisibility="Auto"
                                   HorizontalScrollBarVisibility="Disabled"
                                   materialDesign:ScrollViewerAssist.BubbleVerticalScroll="True">
-                        <ItemsControl ItemsSource="{Binding Games}">
+                        <ItemsControl x:Name="GameItemsControl" ItemsSource="{Binding Games}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <WrapPanel IsItemsHost="True" Orientation="Horizontal" />
