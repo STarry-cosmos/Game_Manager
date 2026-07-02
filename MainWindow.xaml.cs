@@ -135,13 +135,13 @@ namespace Game_Manager
             }
             else
             {
-                RootGrid.Margin = new Thickness(10);
-                ContentBorder.CornerRadius = new CornerRadius(12);
+                RootGrid.Margin = new Thickness(8);
+                ContentBorder.CornerRadius = new CornerRadius(14);
                 ContentBorder.Clip = new RectangleGeometry
                 {
                     Rect = new Rect(0, 0, ContentBorder.ActualWidth, ContentBorder.ActualHeight),
-                    RadiusX = 12,
-                    RadiusY = 12
+                    RadiusX = 14,
+                    RadiusY = 14
                 };
             }
         }

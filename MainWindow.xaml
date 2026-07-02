@@ -1,4 +1,4 @@
-﻿<Window x:Class="Game_Manager.MainWindow"
+<Window x:Class="Game_Manager.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -22,6 +22,64 @@
     </Window.DataContext>
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+
+        <SolidColorBrush x:Key="PageBackgroundBrush" Color="#0B1020" />
+        <SolidColorBrush x:Key="TitleBarBrush" Color="#0A0F1D" />
+        <SolidColorBrush x:Key="PanelBorderBrush" Color="#22304A" />
+        <SolidColorBrush x:Key="MutedTextBrush" Color="#8894AA" />
+        <SolidColorBrush x:Key="SoftTextBrush" Color="#C9D4E8" />
+        <SolidColorBrush x:Key="AccentBrush" Color="#3D73F5" />
+        <LinearGradientBrush x:Key="MainPanelBrush" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#121B2D" Offset="0" />
+            <GradientStop Color="#0B1222" Offset="1" />
+        </LinearGradientBrush>
+        <LinearGradientBrush x:Key="CardPanelBrush" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#172238" Offset="0" />
+            <GradientStop Color="#10192A" Offset="1" />
+        </LinearGradientBrush>
+        <LinearGradientBrush x:Key="ButtonBlueBrush" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#4A82FF" Offset="0" />
+            <GradientStop Color="#2F66E8" Offset="1" />
+        </LinearGradientBrush>
+
+        <Style x:Key="ChromeButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="#B6C0D4" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#1BFFFFFF" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="GlassButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+            <Setter Property="Height" Value="40" />
+            <Setter Property="Padding" Value="14,0" />
+            <Setter Property="Foreground" Value="#C8D5F0" />
+            <Setter Property="Background" Value="#14213A" />
+            <Setter Property="BorderBrush" Value="#294A82" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="8" />
+        </Style>
+
+        <Style x:Key="PrimaryGameButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+            <Setter Property="Height" Value="40" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Background" Value="{StaticResource ButtonBlueBrush}" />
+            <Setter Property="BorderBrush" Value="#3F78F6" />
+            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="7" />
+        </Style>
     </Window.Resources>
 
     <WindowChrome.WindowChrome>
@@ -34,175 +92,187 @@
     </WindowChrome.WindowChrome>
 
     <!-- Outer container with padding for shadow -->
-    <Grid x:Name="RootGrid" Margin="10">
+    <Grid x:Name="RootGrid" Margin="8">
         <!-- Shadow + rounded corners -->
-        <Border CornerRadius="12"
-                Background="{DynamicResource MaterialDesignPaper}">
+        <Border CornerRadius="14"
+                Background="{StaticResource PageBackgroundBrush}">
             <Border.Effect>
-                <DropShadowEffect ShadowDepth="0" BlurRadius="16"
-                                  Opacity="0.5" Color="Black" />
+                <DropShadowEffect ShadowDepth="0" BlurRadius="22"
+                                  Opacity="0.55" Color="#05070D" />
             </Border.Effect>
         </Border>
 
         <!-- Content (same rounded corners, clips children) -->
-        <Border x:Name="ContentBorder" CornerRadius="12"
-                Background="{DynamicResource MaterialDesignPaper}">
+        <Border x:Name="ContentBorder" CornerRadius="14"
+                Background="{StaticResource PageBackgroundBrush}">
             <Border.Clip>
-                <RectangleGeometry Rect="0,0,1180,780" RadiusX="12" RadiusY="12" />
+                <RectangleGeometry Rect="0,0,1184,784" RadiusX="14" RadiusY="14" />
             </Border.Clip>
-            <Grid>
+            <Grid Background="{StaticResource PageBackgroundBrush}">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="32" />
+                    <RowDefinition Height="100" />
                     <RowDefinition Height="*" />
+                    <RowDefinition Height="50" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />
-                    <ColumnDefinition Width="357" />
+                    <ColumnDefinition Width="350" />
                 </Grid.ColumnDefinitions>
 
                 <!-- Custom Title Bar -->
                 <Grid Grid.Row="0" Grid.ColumnSpan="2"
-                      Background="{DynamicResource MaterialDesignToolBarBackground}"
+                      Background="{StaticResource TitleBarBrush}"
                       MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
                     <DockPanel LastChildFill="False">
                         <!-- App title -->
                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Left"
-                                    VerticalAlignment="Center" Margin="16,0,0,0">
-                            <materialDesign:PackIcon Kind="GamepadVariant"
-                                                     Width="18" Height="18"
-                                                     VerticalAlignment="Center"
-                                                     Foreground="{DynamicResource PrimaryHueMidBrush}" />
+                                    VerticalAlignment="Center" Margin="14,0,0,0">
+                            <Ellipse Width="4" Height="4" Fill="#39496A" VerticalAlignment="Center" />
+                            <Ellipse Width="4" Height="4" Fill="#39496A" VerticalAlignment="Center" Margin="4,0,8,0" />
                             <TextBlock Text="Game Manager"
-                                       FontSize="13"
-                                       FontWeight="Medium"
-                                       Foreground="{DynamicResource MaterialDesignBody}"
-                                       VerticalAlignment="Center"
-                                       Margin="8,0,0,0" />
+                                       FontSize="11"
+                                       FontWeight="SemiBold"
+                                       Foreground="#CAD4E8"
+                                       VerticalAlignment="Center" />
                         </StackPanel>
 
                         <!-- Window control buttons -->
                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Right"
                                     HorizontalAlignment="Right">
                             <Button Click="MinimizeButton_Click"
-                                    Width="46" Height="36"
+                                    Width="36" Height="32"
                                     ToolTip="最小化"
-                                    Cursor="Hand">
-                                <Button.Template>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border x:Name="Bd" Background="Transparent">
-                                            <materialDesign:PackIcon Kind="WindowMinimize"
-                                                                     Width="16" Height="16"
-                                                                     HorizontalAlignment="Center"
-                                                                     VerticalAlignment="Center"
-                                                                     Foreground="{DynamicResource MaterialDesignBody}" />
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="Bd" Property="Background" Value="#33FFFFFF" />
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Button.Template>
+                                    Style="{StaticResource ChromeButtonStyle}">
+                                <materialDesign:PackIcon Kind="WindowMinimize"
+                                                         Width="13" Height="13"
+                                                         Foreground="#AEB8CC" />
                             </Button>
                             <Button x:Name="MaximizeBtn"
                                     Click="MaximizeButton_Click"
-                                    Width="46" Height="36"
+                                    Width="36" Height="32"
                                     ToolTip="最大化"
-                                    Cursor="Hand">
-                                <Button.Template>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border x:Name="Bd" Background="Transparent">
-                                            <materialDesign:PackIcon x:Name="MaxIcon"
-                                                                     Kind="WindowMaximize"
-                                                                     Width="16" Height="16"
-                                                                     HorizontalAlignment="Center"
-                                                                     VerticalAlignment="Center"
-                                                                     Foreground="{DynamicResource MaterialDesignBody}" />
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="Bd" Property="Background" Value="#33FFFFFF" />
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Button.Template>
+                                    Style="{StaticResource ChromeButtonStyle}">
+                                <materialDesign:PackIcon x:Name="MaxIcon"
+                                                         Kind="WindowMaximize"
+                                                         Width="12" Height="12"
+                                                         Foreground="#AEB8CC" />
                             </Button>
                             <Button Click="CloseButton_Click"
-                                    Width="46" Height="36"
+                                    Width="40" Height="32"
                                     ToolTip="关闭"
-                                    Cursor="Hand">
-                                <Button.Template>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border x:Name="Bd" Background="Transparent">
-                                            <materialDesign:PackIcon Kind="WindowClose"
-                                                                     Width="16" Height="16"
-                                                                     HorizontalAlignment="Center"
-                                                                     VerticalAlignment="Center"
-                                                                     Foreground="{DynamicResource MaterialDesignBody}" />
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="Bd" Property="Background" Value="#FFE81123" />
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Button.Template>
+                                    Style="{StaticResource ChromeButtonStyle}">
+                                <materialDesign:PackIcon Kind="WindowClose"
+                                                         Width="13" Height="13"
+                                                         Foreground="#AEB8CC" />
                             </Button>
                         </StackPanel>
                     </DockPanel>
                 </Grid>
 
                 <!-- Header -->
-                <materialDesign:Card Grid.Row="1" Grid.ColumnSpan="2"
-                                     Margin="16,10,16,8"
-                                     Padding="20,16"
-                                     UniformCornerRadius="16"
-                                     Background="{DynamicResource MaterialDesignCardBackground}"
-                                     materialDesign:ElevationAssist.Elevation="Dp2">
+                <Border Grid.Row="1" Grid.ColumnSpan="2"
+                        Margin="12,12,12,0"
+                        Padding="16,12"
+                        CornerRadius="12"
+                        Background="{StaticResource MainPanelBrush}"
+                        BorderBrush="{StaticResource PanelBorderBrush}"
+                        BorderThickness="1">
                     <DockPanel LastChildFill="False">
-                        <StackPanel Orientation="Vertical" DockPanel.Dock="Left">
-                            <TextBlock Text="🎮 游戏管理"
-                                       FontSize="26"
-                                       FontWeight="Bold"
-                                       Foreground="{DynamicResource MaterialDesignBody}" />
-                            <TextBlock Text="点击卡片查看游戏详情"
-                                       FontSize="13"
-                                       Foreground="{DynamicResource MaterialDesignBodyLight}"
-                                       Margin="0,4,0,0" />
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+                            <Border Width="38" Height="38"
+                                    CornerRadius="10"
+                                    Background="#10234A"
+                                    BorderBrush="#326BF4"
+                                    BorderThickness="1.5">
+                                <materialDesign:PackIcon Kind="GamepadVariant"
+                                                         Width="24" Height="24"
+                                                         HorizontalAlignment="Center"
+                                                         VerticalAlignment="Center"
+                                                         Foreground="#5D8CFF" />
+                            </Border>
+                            <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="游戏管理"
+                                           FontSize="20"
+                                           FontWeight="Bold"
+                                           Foreground="#F4F7FF" />
+                                <TextBlock Text="管理你的游戏库，启动精彩游戏"
+                                           FontSize="11"
+                                           Foreground="{StaticResource MutedTextBrush}"
+                                           Margin="0,3,0,0" />
+                            </StackPanel>
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
-                            <ComboBox Width="180"
-                                      Margin="0,0,10,0"
+
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" Height="51">
+                            <Border Width="185"
+                                    Height="46"
+                                    Margin="0,0,12,0"
+                                    CornerRadius="7"
+                                    Background="#0D1526"
+                                    BorderBrush="{StaticResource PanelBorderBrush}"
+                                    BorderThickness="1">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="34" />
+                                        <ColumnDefinition />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon Kind="Magnify"
+                                                             Width="16" Height="16"
+                                                             VerticalAlignment="Center"
+                                                             HorizontalAlignment="Center"
+                                                             Foreground="{StaticResource MutedTextBrush}" />
+                                    <TextBlock Grid.Column="1"
+                                               Text="搜索游戏..."
+                                               FontSize="11"
+                                               Foreground="#6D7890"
+                                               VerticalAlignment="Center" />
+                                </Grid>
+                            </Border>
+                            <ComboBox Width="142"
+                                      Height="46"
+                                      Margin="0,0,12,0"
                                       ItemsSource="{Binding SortOptions}"
                                       SelectedIndex="{Binding SelectedSortIndex, Mode=TwoWay}"
-                                      materialDesign:HintAssist.Hint="排序方式"
+                                      Padding="10,0"
+                                      Foreground="#D8E2F8"
+                                      Background="#0D1526"
+                                      BorderBrush="{StaticResource PanelBorderBrush}"
                                       Style="{StaticResource MaterialDesignOutlinedComboBox}" />
                             <Button Command="{Binding ToggleSortDirectionCommand}"
-                                    Content="{Binding SortDirectionLabel}"
-                                    Style="{StaticResource MaterialDesignOutlinedButton}"
-                                    Width="88"
-                                    Height="38"
-                                    Margin="0,0,10,0"
-                                    IsEnabled="{Binding IsSortDirectionEnabled}" />
+                                    Style="{StaticResource GlassButtonStyle}"
+                                    Width="90"
+                                    Margin="0,0,12,0"
+                                    IsEnabled="{Binding IsSortDirectionEnabled}">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="Sync" Width="14" Height="14" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding SortDirectionLabel}" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
                             <Button Command="{Binding AddGameCommand}"
-                                    Content="添加游戏"
-                                    Style="{StaticResource MaterialDesignRaisedButton}"
-                                    materialDesign:ButtonAssist.CornerRadius="10"
-                                    Width="110"
-                                    Height="38"
-                                    Margin="0,0,4,0" />
+                                    Style="{StaticResource PrimaryGameButtonStyle}"
+                                    Width="100"
+                                    Padding="0">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Width="83">
+                                    <materialDesign:PackIcon Kind="PlusCircle" Width="12" Height="12" VerticalAlignment="Center" />
+                                    <TextBlock Text="添加游戏" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
                         </StackPanel>
                     </DockPanel>
-                </materialDesign:Card>
+                </Border>
 
                 <!-- Game Cards ScrollViewer -->
-                <ScrollViewer Grid.Row="2" Grid.Column="0"
-                              VerticalScrollBarVisibility="Auto"
-                              HorizontalScrollBarVisibility="Disabled"
-                              Padding="8,4"
-                              materialDesign:ScrollViewerAssist.BubbleVerticalScroll="True" Grid.ColumnSpan="2" Margin="0,0,348,0">
-                    <ItemsControl ItemsSource="{Binding Games}">
+                <Border Grid.Row="2" Grid.Column="0"
+                        Margin="12,12,0,0"
+                        Padding="10,8"
+                        CornerRadius="10"
+                        Background="{StaticResource MainPanelBrush}"
+                        BorderBrush="#1D2A42"
+                        BorderThickness="1">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled"
+                                  materialDesign:ScrollViewerAssist.BubbleVerticalScroll="True">
+                        <ItemsControl ItemsSource="{Binding Games}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <WrapPanel IsItemsHost="True" Orientation="Horizontal" />
@@ -213,8 +283,8 @@
                                 <materialDesign:Card UniformCornerRadius="16"
                                                      Margin="10"
                                                      Width="244"
-                                                     materialDesign:ElevationAssist.Elevation="Dp4"
-                                                     Background="{DynamicResource MaterialDesignCardBackground}"
+                                                     materialDesign:ElevationAssist.Elevation="Dp2"
+                                                     Background="{StaticResource CardPanelBrush}"
                                                      Cursor="Hand"
                                                      PreviewMouseLeftButtonDown="Card_PreviewMouseLeftButtonDown"
                                                      MouseMove="Card_MouseMove"
@@ -230,16 +300,16 @@
                                     </materialDesign:Card.ContextMenu>
                                     <Grid>
                                         <Border CornerRadius="16"
-                                                BorderBrush="{DynamicResource PrimaryHueMidBrush}"
+                                                BorderBrush="#4E82FF"
                                                 BorderThickness="2"
-                                                Background="#40FFFFFF"
+                                                Background="#223D7A"
                                                 Visibility="{Binding IsDropTarget, Converter={StaticResource BoolToVisibility}}"
                                                 IsHitTestVisible="False" />
                                         <DockPanel LastChildFill="True" MouseLeftButtonUp="OnCardClicked">
                                         <!-- Cover Image -->
                                         <Grid Width="220" Height="124" Margin="12,12,12,0"
                                               DockPanel.Dock="Top" ClipToBounds="True">
-                                            <Border CornerRadius="10" ClipToBounds="True">
+                                            <Border CornerRadius="10" ClipToBounds="True" Background="#0B1020">
                                                 <Image Source="{Binding CoverImage}"
                                                        Stretch="UniformToFill"
                                                        SnapsToDevicePixels="True"
@@ -247,12 +317,12 @@
                                             </Border>
                                             <Border CornerRadius="10" ClipToBounds="True"
                                                     Visibility="{Binding IsRunning, Converter={StaticResource BoolToVisibility}}"
-                                                    Background="#CC000000">
+                                                    Background="#B8000000">
                                                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                                                     <materialDesign:PackIcon Kind="GamepadVariant"
                                                                              Width="32" Height="32"
                                                                              HorizontalAlignment="Center"
-                                                                             Foreground="{DynamicResource PrimaryHueMidBrush}" />
+                                                                             Foreground="#F8FAFF" />
                                                     <TextBlock Text="游戏中..."
                                                                Foreground="White"
                                                                FontSize="16"
@@ -265,13 +335,25 @@
 
                                         <!-- Card Content -->
                                         <StackPanel Margin="14,12,14,14">
-                                            <TextBlock Text="{Binding Name}"
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition />
+                                                    <ColumnDefinition Width="20" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding Name}"
                                                        FontSize="16"
                                                        FontWeight="Bold"
-                                                       Foreground="{DynamicResource MaterialDesignBody}"
+                                                       Foreground="#EEF3FF"
                                                        TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Grid.Column="1"
+                                                           Text="..."
+                                                           Foreground="{StaticResource MutedTextBrush}"
+                                                           FontWeight="Bold"
+                                                           HorizontalAlignment="Right"
+                                                           VerticalAlignment="Top" />
+                                            </Grid>
                                             <TextBlock Text="{Binding ExecutablePath}"
-                                                       Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                                       Foreground="{StaticResource MutedTextBrush}"
                                                        FontSize="11"
                                                        Margin="0,4,0,0"
                                                        TextTrimming="CharacterEllipsis"
@@ -280,15 +362,15 @@
                                             <!-- Stats Row -->
                                             <Border Margin="0,10,0,0"
                                                     Padding="8,6"
-                                                    Background="{DynamicResource MaterialDesignToolBarBackground}"
+                                                    Background="#10192A"
                                                     CornerRadius="8">
                                                 <StackPanel>
                                                     <DockPanel>
                                                         <materialDesign:PackIcon Kind="ClockOutline" Width="14" Height="14"
                                                                                  VerticalAlignment="Center"
-                                                                                 Foreground="{DynamicResource PrimaryHueMidBrush}" />
+                                                                                 Foreground="#8291A9" />
                                                         <TextBlock Text="{Binding CurrentSessionDisplay}"
-                                                                   Foreground="{DynamicResource MaterialDesignBody}"
+                                                                   Foreground="#D9E3F7"
                                                                    FontWeight="Bold"
                                                                    FontSize="12"
                                                                    Margin="6,0,0,0"
@@ -297,9 +379,9 @@
                                                     <DockPanel Margin="0,4,0,0">
                                                         <materialDesign:PackIcon Kind="CalendarClock" Width="14" Height="14"
                                                                                  VerticalAlignment="Center"
-                                                                                 Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                                                                                 Foreground="#8291A9" />
                                                         <TextBlock Text="{Binding LastPlayedDisplay}"
-                                                                   Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                                                   Foreground="{StaticResource MutedTextBrush}"
                                                                    FontSize="11"
                                                                    Margin="6,0,0,0"
                                                                    VerticalAlignment="Center" />
@@ -314,7 +396,7 @@
                                                     materialDesign:ButtonAssist.CornerRadius="10"
                                                     Height="36">
                                                 <Button.Style>
-                                                    <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                                                    <Style TargetType="Button" BasedOn="{StaticResource PrimaryGameButtonStyle}">
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding IsRunning}" Value="True">
                                                                 <Setter Property="Content" Value="游戏中……" />
@@ -330,16 +412,17 @@
                                 </materialDesign:Card>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Border>
 
                 <!-- Detail Panel -->
                 <materialDesign:Card Grid.Row="2" Grid.Column="1"
-                                     Margin="8,4,16,16"
+                                     Margin="8,12,16,0"
                                      Padding="22"
                                      UniformCornerRadius="16"
-                                     Background="{DynamicResource MaterialDesignCardBackground}"
-                                     materialDesign:ElevationAssist.Elevation="Dp4"
+                                     Background="{StaticResource CardPanelBrush}"
+                                     materialDesign:ElevationAssist.Elevation="Dp2"
                                      Visibility="{Binding IsGameSelected, Converter={StaticResource BoolToVisibility}}">
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel>
@@ -348,25 +431,25 @@
                                 <materialDesign:PackIcon Kind="InformationOutline"
                                                          Width="24" Height="24"
                                                          VerticalAlignment="Center"
-                                                         Foreground="{DynamicResource PrimaryHueMidBrush}" />
+                                                         Foreground="#89A4D8" />
                                 <TextBlock Text="游戏详情"
                                            FontSize="22"
                                            FontWeight="Bold"
-                                           Foreground="{DynamicResource MaterialDesignBody}"
+                                           Foreground="#EEF3FF"
                                            Margin="8,0,0,0"
                                            VerticalAlignment="Center" />
                             </StackPanel>
 
                             <Separator Margin="0,0,0,16"
-                                       Background="{DynamicResource MaterialDesignDivider}" />
+                                       Background="#24324C" />
 
                             <!-- Game Name -->
                             <TextBlock Text="游戏名称"
-                                       Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                       Foreground="{StaticResource MutedTextBrush}"
                                        FontSize="12"
                                        FontWeight="Medium" />
                             <TextBlock Text="{Binding SelectedGame.Name}"
-                                       Foreground="{DynamicResource MaterialDesignBody}"
+                                       Foreground="#EAF0FF"
                                        FontSize="17"
                                        FontWeight="Bold"
                                        TextTrimming="CharacterEllipsis"
@@ -374,11 +457,11 @@
 
                             <!-- Path -->
                             <TextBlock Text="所在路径"
-                                       Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                       Foreground="{StaticResource MutedTextBrush}"
                                        FontSize="12"
                                        FontWeight="Medium" />
                             <TextBlock Text="{Binding SelectedGame.ExecutablePath}"
-                                       Foreground="{DynamicResource MaterialDesignBody}"
+                                       Foreground="#CBD6EA"
                                        FontSize="12"
                                        TextWrapping="Wrap"
                                        Margin="0,4,0,8" />
@@ -388,6 +471,8 @@
                                         Content="打开"
                                         Width="64"
                                         Height="32"
+                                        FontSize="12"
+                                        Foreground="#4488FF"
                                         Margin="0,0,8,0"
                                         materialDesign:ButtonAssist.CornerRadius="8" />
 
@@ -396,22 +481,24 @@
                                         Content="修改"
                                         Width="64"
                                         Height="32"
+                                        FontSize="12"
+                                        Foreground="#4488FF"
                                         materialDesign:ButtonAssist.CornerRadius="8" />
                             </StackPanel>
 
                             <!-- Play Time -->
                             <TextBlock Text="累计时长"
-                                       Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                       Foreground="{StaticResource MutedTextBrush}"
                                        FontSize="12"
                                        FontWeight="Medium" />
                             <StackPanel Orientation="Horizontal" Margin="0,4,0,16">
                                 <materialDesign:PackIcon Kind="ClockOutline"
                                                          Width="18" Height="18"
                                                          VerticalAlignment="Center"
-                                                         Foreground="{DynamicResource PrimaryHueMidBrush}"
+                                                         Foreground="#7F8EA5"
                                                          Margin="0,0,6,0" />
                                 <TextBlock Text="{Binding SelectedGame.CurrentSessionDisplay}"
-                                           Foreground="{DynamicResource MaterialDesignBody}"
+                                           Foreground="#EAF0FF"
                                            FontSize="17"
                                            FontWeight="Bold"
                                            VerticalAlignment="Center" />
@@ -419,34 +506,34 @@
 
                             <!-- Last Played -->
                             <TextBlock Text="最后运行日期"
-                                       Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                       Foreground="{StaticResource MutedTextBrush}"
                                        FontSize="12"
                                        FontWeight="Medium" />
                             <StackPanel Orientation="Horizontal" Margin="0,4,0,24">
                                 <materialDesign:PackIcon Kind="CalendarClock"
                                                          Width="18" Height="18"
                                                          VerticalAlignment="Center"
-                                                         Foreground="{DynamicResource PrimaryHueMidBrush}"
+                                                         Foreground="#7F8EA5"
                                                          Margin="0,0,6,0" />
                                 <TextBlock Text="{Binding SelectedGame.LastPlayedDisplay}"
-                                           Foreground="{DynamicResource MaterialDesignBody}"
+                                           Foreground="#EAF0FF"
                                            FontSize="17"
                                            FontWeight="Bold"
                                            VerticalAlignment="Center" />
                             </StackPanel>
 
                             <Separator Margin="0,0,0,16"
-                                       Background="{DynamicResource MaterialDesignDivider}" />
+                                       Background="#24324C" />
 
                             <!-- Actions -->
                             <TextBlock Text="操作"
-                                       Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                       Foreground="{StaticResource MutedTextBrush}"
                                        FontSize="12"
                                        FontWeight="Medium"
                                        Margin="0,0,0,10" />
                             <StackPanel Orientation="Vertical">
                                 <Button Command="{Binding SelectedGame.PlayCommand}"
-                                        Style="{StaticResource MaterialDesignRaisedButton}"
+                                        Style="{StaticResource PrimaryGameButtonStyle}"
                                         materialDesign:ButtonAssist.CornerRadius="10"
                                         Height="38"
                                         Margin="0,0,0,8">
@@ -459,6 +546,9 @@
                                         Style="{StaticResource MaterialDesignRaisedButton}"
                                         materialDesign:ButtonAssist.CornerRadius="10"
                                         Height="38"
+                                        Background="#24304A"
+                                        BorderBrush="#24304A"
+                                        Foreground="#EAF0FF"
                                         Margin="0,0,0,8">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="Pencil" Width="18" Height="18" VerticalAlignment="Center" />
@@ -469,6 +559,9 @@
                                         Style="{StaticResource MaterialDesignRaisedButton}"
                                         materialDesign:ButtonAssist.CornerRadius="10"
                                         Height="38"
+                                        Background="#24304A"
+                                        BorderBrush="#24304A"
+                                        Foreground="#EAF0FF"
                                         Margin="0,0,0,8">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="ImageEdit" Width="18" Height="18" VerticalAlignment="Center" />
@@ -479,8 +572,8 @@
                                         Style="{StaticResource MaterialDesignRaisedButton}"
                                         materialDesign:ButtonAssist.CornerRadius="10"
                                         Height="38"
-                                        Background="#FFEF5350"
-                                        BorderBrush="#FFEF5350"
+                                        Background="#EA3943"
+                                        BorderBrush="#EA3943"
                                         Foreground="White"
                                         Margin="0,4,0,0">
                                     <StackPanel Orientation="Horizontal">
@@ -492,6 +585,47 @@
                         </StackPanel>
                     </ScrollViewer>
                 </materialDesign:Card>
+
+                <!-- Bottom Status Bar -->
+                <Grid Grid.Row="3" Grid.ColumnSpan="2" Margin="18,0,18,0">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Width="25" Height="25"
+                                CornerRadius="6"
+                                Background="#10234A"
+                                BorderBrush="#326BF4"
+                                BorderThickness="1">
+                            <materialDesign:PackIcon Kind="GamepadVariant"
+                                                     Width="16" Height="16"
+                                                     HorizontalAlignment="Center"
+                                                     VerticalAlignment="Center"
+                                                     Foreground="#5D8CFF" />
+                        </Border>
+                        <TextBlock Text="{Binding Games.Count, StringFormat=共 {0} 个游戏}"
+                                   FontSize="11"
+                                   Foreground="#9DA9BF"
+                                   Margin="12,0,0,0"
+                                   VerticalAlignment="Center" />
+                        <TextBlock Text="总游戏时长 00:00:22"
+                                   FontSize="11"
+                                   Foreground="#9DA9BF"
+                                   Margin="22,0,0,0"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Button Width="46" Height="32"
+                                Style="{StaticResource PrimaryGameButtonStyle}"
+                                ToolTip="网格视图">
+                            <TextBlock Text="▦" FontSize="16" Foreground="White" VerticalAlignment="Center" />
+                        </Button>
+                        <Button Width="40" Height="32"
+                                Margin="6,0,0,0"
+                                Style="{StaticResource GlassButtonStyle}"
+                                ToolTip="列表视图">
+                            <TextBlock Text="≡" FontSize="18" Foreground="#9DA9BF" VerticalAlignment="Center" />
+                        </Button>
+                    </StackPanel>
+                </Grid>
             </Grid>
         </Border>
     </Grid>
