@@ -154,8 +154,8 @@ namespace Game_Manager.ViewModels
             AddGameCommand = new RelayCommand(AddGame);
             SelectGameCommand = new RelayCommand<GameItemViewModel>(SelectGame);
             ToggleSortDirectionCommand = new RelayCommand(ToggleSortDirection);
-            ShowGridViewCommand = new RelayCommand(() => IsGridView = true);
-            ShowListViewCommand = new RelayCommand(() => IsGridView = false);
+            ShowGridViewCommand = new RelayCommand(() => SetViewMode(true));
+            ShowListViewCommand = new RelayCommand(() => SetViewMode(false));
             LoadGames();
         }
 
@@ -179,11 +179,14 @@ namespace Game_Manager.ViewModels
                 var settings = AppSettingsManager.LoadSortSettings();
                 _selectedSortIndex = settings.SelectedSortIndex;
                 _isAscending = settings.IsAscending;
+                _isGridView = settings.IsGridView;
                 OnPropertyChanged(nameof(SelectedSortIndex));
                 OnPropertyChanged(nameof(IsAscending));
                 OnPropertyChanged(nameof(IsCustomSortMode));
                 OnPropertyChanged(nameof(SortDirectionLabel));
                 OnPropertyChanged(nameof(IsSortDirectionEnabled));
+                OnPropertyChanged(nameof(IsGridView));
+                OnPropertyChanged(nameof(IsListView));
             }
             catch { }
         }
@@ -195,11 +198,18 @@ namespace Game_Manager.ViewModels
                 var settings = new SortSettings
                 {
                     SelectedSortIndex = SelectedSortIndex,
-                    IsAscending = IsAscending
+                    IsAscending = IsAscending,
+                    IsGridView = IsGridView
                 };
                 AppSettingsManager.SaveSortSettings(settings);
             }
             catch { }
+        }
+
+        private void SetViewMode(bool isGridView)
+        {
+            IsGridView = isGridView;
+            SaveSortSettings();
         }
 
         private void LoadGames()

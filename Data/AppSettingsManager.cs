@@ -8,6 +8,7 @@ namespace Game_Manager.Data
     {
         public int SelectedSortIndex { get; init; }
         public bool IsAscending { get; init; }
+        public bool IsGridView { get; init; } = true;
     }
 
     public static class AppSettingsManager

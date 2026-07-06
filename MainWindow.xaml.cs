@@ -195,6 +195,11 @@ namespace Game_Manager
                 return;
             }
 
+            if (e.OriginalSource is DependencyObject source && IsInsideButton(source))
+            {
+                return;
+            }
+
             if (sender is FrameworkElement element && element.DataContext is GameItemViewModel game)
             {
                 _draggedGame = game;
@@ -247,8 +252,9 @@ namespace Game_Manager
             {
                 var mousePosition = e.GetPosition(this);
                 var hitResult = VisualTreeHelper.HitTest(this, mousePosition);
-                var targetElement = FindGameCardElement(hitResult?.VisualHit as DependencyObject)
-                    ?? FindNearestGameCardElement(mousePosition);
+                var targetElement = viewModel.IsListView
+                    ? FindGameListRowElement(hitResult?.VisualHit as DependencyObject) ?? FindNearestGameListRowElement(mousePosition)
+                    : FindGameCardElement(hitResult?.VisualHit as DependencyObject) ?? FindNearestGameCardElement(mousePosition);
                 if (targetElement?.DataContext is GameItemViewModel targetGame && targetGame != _draggedGame)
                 {
                     if (_dragTargetGame != targetGame)
@@ -258,7 +264,9 @@ namespace Game_Manager
                         targetGame.IsDropTarget = true;
                     }
 
-                    var insertAfter = ShouldInsertAfterTarget(targetElement, mousePosition);
+                    var insertAfter = viewModel.IsListView
+                        ? ShouldInsertAfterListRow(targetElement, mousePosition)
+                        : ShouldInsertAfterTarget(targetElement, mousePosition);
                     viewModel.ReorderGames(_draggedGame, targetGame, insertAfter);
                 }
                 else if (_dragTargetGame != null)
@@ -354,6 +362,62 @@ namespace Game_Manager
             return nearestElement;
         }
 
+        private static FrameworkElement? FindGameListRowElement(DependencyObject? source)
+        {
+            while (source != null)
+            {
+                if (source is FrameworkElement element &&
+                    element.DataContext is GameItemViewModel &&
+                    Equals(element.Tag, "GameListRow"))
+                {
+                    return element;
+                }
+
+                source = VisualTreeHelper.GetParent(source);
+            }
+
+            return null;
+        }
+
+        private FrameworkElement? FindNearestGameListRowElement(Point mousePosition)
+        {
+            FrameworkElement? nearestElement = null;
+            var nearestDistance = double.MaxValue;
+
+            foreach (var element in FindVisualChildren<FrameworkElement>(GameListItemsControl))
+            {
+                if (!Equals(element.Tag, "GameListRow") ||
+                    element.DataContext is not GameItemViewModel game ||
+                    game == _draggedGame)
+                {
+                    continue;
+                }
+
+                var bounds = GetElementBounds(element);
+                if (bounds == Rect.Empty)
+                {
+                    continue;
+                }
+
+                var interactionBounds = bounds;
+                interactionBounds.Inflate(0, bounds.Height * 0.45);
+                if (!interactionBounds.Contains(mousePosition))
+                {
+                    continue;
+                }
+
+                var centerY = bounds.Top + bounds.Height / 2;
+                var distance = Math.Abs(mousePosition.Y - centerY);
+                if (distance < nearestDistance)
+                {
+                    nearestDistance = distance;
+                    nearestElement = element;
+                }
+            }
+
+            return nearestElement;
+        }
+
         private bool ShouldInsertAfterTarget(FrameworkElement targetElement, Point mousePosition)
         {
             var bounds = GetElementBounds(targetElement);
@@ -363,6 +427,17 @@ namespace Game_Manager
             }
 
             return mousePosition.X >= bounds.Left + bounds.Width / 2;
+        }
+
+        private bool ShouldInsertAfterListRow(FrameworkElement targetElement, Point mousePosition)
+        {
+            var bounds = GetElementBounds(targetElement);
+            if (bounds == Rect.Empty)
+            {
+                return false;
+            }
+
+            return mousePosition.Y >= bounds.Top + bounds.Height / 2;
         }
 
         private Rect GetElementBounds(FrameworkElement element)

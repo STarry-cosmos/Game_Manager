@@ -426,7 +426,7 @@
                                   VerticalScrollBarVisibility="Auto"
                                   HorizontalScrollBarVisibility="Disabled"
                                   materialDesign:ScrollViewerAssist.BubbleVerticalScroll="True">
-                        <ItemsControl ItemsSource="{Binding Games}">
+                        <ItemsControl x:Name="GameListItemsControl" ItemsSource="{Binding Games}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <StackPanel IsItemsHost="True" Orientation="Vertical" />
@@ -436,10 +436,26 @@
                                 <DataTemplate>
                                     <Border Margin="0,0,0,1"
                                             Padding="10,10"
-                                            Background="#06101F"
-                                            BorderBrush="#17243A"
-                                            BorderThickness="0,0,0,1"
+                                            Cursor="Hand"
+                                            Tag="GameListRow"
+                                            PreviewMouseLeftButtonDown="Card_PreviewMouseLeftButtonDown"
+                                            MouseMove="Card_MouseMove"
+                                            PreviewMouseLeftButtonUp="Card_PreviewMouseLeftButtonUp"
                                             MouseLeftButtonUp="OnCardClicked">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#06101F" />
+                                                <Setter Property="BorderBrush" Value="#17243A" />
+                                                <Setter Property="BorderThickness" Value="0,0,0,1" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsDropTarget}" Value="True">
+                                                        <Setter Property="BorderBrush" Value="#4E82FF" />
+                                                        <Setter Property="BorderThickness" Value="0,0,0,2" />
+                                                        <Setter Property="Background" Value="#101A2D" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="30" />
