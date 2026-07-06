@@ -37,6 +37,8 @@ namespace Game_Manager.ViewModels
         public IRelayCommand AddGameCommand { get; }
         public IRelayCommand<GameItemViewModel> SelectGameCommand { get; }
         public IRelayCommand ToggleSortDirectionCommand { get; }
+        public IRelayCommand ShowGridViewCommand { get; }
+        public IRelayCommand ShowListViewCommand { get; }
 
         private GameItemViewModel? _selectedGame;
         public GameItemViewModel? SelectedGame
@@ -110,6 +112,21 @@ namespace Game_Manager.ViewModels
         public string TotalGameCountDisplay => $"共 {_allGames.Count} 个游戏";
         public string TotalGameTimeDisplay => $"总游戏时长 {FormatDuration(_allGames.Sum(game => game.TotalPlayTimeSeconds))}";
 
+        private bool _isGridView = true;
+        public bool IsGridView
+        {
+            get => _isGridView;
+            private set
+            {
+                if (_isGridView == value) return;
+                _isGridView = value;
+                OnPropertyChanged(nameof(IsGridView));
+                OnPropertyChanged(nameof(IsListView));
+            }
+        }
+
+        public bool IsListView => !IsGridView;
+
         private string _searchText = string.Empty;
         public string SearchText
         {
@@ -137,6 +154,8 @@ namespace Game_Manager.ViewModels
             AddGameCommand = new RelayCommand(AddGame);
             SelectGameCommand = new RelayCommand<GameItemViewModel>(SelectGame);
             ToggleSortDirectionCommand = new RelayCommand(ToggleSortDirection);
+            ShowGridViewCommand = new RelayCommand(() => IsGridView = true);
+            ShowListViewCommand = new RelayCommand(() => IsGridView = false);
             LoadGames();
         }
 
@@ -291,6 +310,7 @@ namespace Game_Manager.ViewModels
             {
                 Games.Add(game);
             }
+            UpdateDisplayIndexes();
 
             if (IsCustomSortMode && string.IsNullOrWhiteSpace(SearchText))
             {
@@ -421,7 +441,16 @@ namespace Game_Manager.ViewModels
             }
 
             Games.Move(sourceIndex, insertIndex);
+            UpdateDisplayIndexes();
             PersistCustomOrder();
+        }
+
+        private void UpdateDisplayIndexes()
+        {
+            for (var index = 0; index < Games.Count; index++)
+            {
+                Games[index].SetDisplayIndex(index + 1);
+            }
         }
 
         private void OnGamePropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -441,9 +470,7 @@ namespace Game_Manager.ViewModels
         private static string FormatDuration(long totalSeconds)
         {
             var duration = TimeSpan.FromSeconds(Math.Max(0, totalSeconds));
-            return duration.TotalHours >= 100
-                ? $"{(long)duration.TotalHours:00}:{duration.Minutes:00}:{duration.Seconds:00}"
-                : duration.ToString(@"hh\:mm\:ss");
+            return $"{(long)duration.TotalHours:00}:{duration.Minutes:00}:{duration.Seconds:00}";
         }
     }
 }

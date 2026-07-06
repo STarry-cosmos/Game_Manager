@@ -67,6 +67,18 @@ namespace Game_Manager.ViewModels
             }
         }
 
+        private int _displayIndex;
+        public int DisplayIndex
+        {
+            get => _displayIndex;
+            private set
+            {
+                if (_displayIndex == value) return;
+                _displayIndex = value;
+                OnPropertyChanged(nameof(DisplayIndex));
+            }
+        }
+
         public DateTime? LastPlayedDate => _model.LastPlayedDate;
 
         public ICommand DeleteCommand { get; }
@@ -79,7 +91,7 @@ namespace Game_Manager.ViewModels
 
         public long TotalPlayTimeSeconds => _totalPlaySeconds + (IsRunning && _sessionStartUtc.HasValue ? (long)(DateTime.UtcNow - _sessionStartUtc.Value).TotalSeconds : 0);
 
-        public string CurrentSessionDisplay => TimeSpan.FromSeconds(_currentSessionSeconds).ToString(@"hh\:mm\:ss");
+        public string CurrentSessionDisplay => FormatDuration(_currentSessionSeconds);
 
         public string LastPlayedDisplay
         {
@@ -105,6 +117,8 @@ namespace Game_Manager.ViewModels
         }
 
         public void SetSortOrder(int sortOrder) => SortOrder = sortOrder;
+
+        public void SetDisplayIndex(int displayIndex) => DisplayIndex = displayIndex;
 
         public GameItemViewModel(GameModel model, ProcessMonitorService monitor, IDatabaseManager db)
         {
@@ -474,6 +488,12 @@ namespace Game_Manager.ViewModels
                 _monitor.GameStarted -= OnGameStarted;
             }
             catch { }
+        }
+
+        private static string FormatDuration(long totalSeconds)
+        {
+            var duration = TimeSpan.FromSeconds(Math.Max(0, totalSeconds));
+            return $"{(long)duration.TotalHours:00}:{duration.Minutes:00}:{duration.Seconds:00}";
         }
     }
 }

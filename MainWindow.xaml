@@ -275,7 +275,9 @@
                         Background="{StaticResource MainPanelBrush}"
                         BorderBrush="#1D2A42"
                         BorderThickness="1">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                    <Grid>
+                    <ScrollViewer Visibility="{Binding IsGridView, Converter={StaticResource BoolToVisibility}}"
+                                  VerticalScrollBarVisibility="Auto"
                                   HorizontalScrollBarVisibility="Disabled"
                                   materialDesign:ScrollViewerAssist.BubbleVerticalScroll="True">
                         <ItemsControl x:Name="GameItemsControl" ItemsSource="{Binding Games}">
@@ -288,7 +290,7 @@
                             <DataTemplate>
                                 <materialDesign:Card UniformCornerRadius="16"
                                                      Margin="10"
-                                                     Width="244"
+                                                     Width="240"
                                                      materialDesign:ElevationAssist.Elevation="Dp2"
                                                      Background="{StaticResource CardPanelBrush}"
                                                      Cursor="Hand"
@@ -420,6 +422,163 @@
                         </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </ScrollViewer>
+                    <ScrollViewer Visibility="{Binding IsListView, Converter={StaticResource BoolToVisibility}}"
+                                  VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled"
+                                  materialDesign:ScrollViewerAssist.BubbleVerticalScroll="True">
+                        <ItemsControl ItemsSource="{Binding Games}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel IsItemsHost="True" Orientation="Vertical" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Margin="0,0,0,1"
+                                            Padding="10,10"
+                                            Background="#06101F"
+                                            BorderBrush="#17243A"
+                                            BorderThickness="0,0,0,1"
+                                            MouseLeftButtonUp="OnCardClicked">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="30" />
+                                                <ColumnDefinition Width="135" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="132" />
+                                                <ColumnDefinition Width="145" />
+                                                <ColumnDefinition Width="118" />
+                                                <ColumnDefinition Width="38" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <Border Width="18" Height="18"
+                                                    CornerRadius="4"
+                                                    Background="#3D73F5"
+                                                    HorizontalAlignment="Left"
+                                                    VerticalAlignment="Top">
+                                                <TextBlock Text="{Binding DisplayIndex}"
+                                                           Foreground="White"
+                                                           FontSize="11"
+                                                           FontWeight="Bold"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center" />
+                                            </Border>
+
+                                            <Grid Grid.Column="1" Width="118" Height="64" HorizontalAlignment="Left" ClipToBounds="True">
+                                                <Border CornerRadius="4" ClipToBounds="True" Background="#0B1020">
+                                                    <Image Source="{Binding CoverImage}"
+                                                           Stretch="UniformToFill"
+                                                           SnapsToDevicePixels="True" />
+                                                </Border>
+                                                <Border CornerRadius="4"
+                                                        Visibility="{Binding IsRunning, Converter={StaticResource BoolToVisibility}}"
+                                                        Background="#B8000000">
+                                                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                        <materialDesign:PackIcon Kind="GamepadVariant"
+                                                                                 Width="18" Height="18"
+                                                                                 HorizontalAlignment="Center"
+                                                                                 Foreground="#F8FAFF" />
+                                                        <TextBlock Text="游戏中..."
+                                                                   Foreground="White"
+                                                                   FontSize="11"
+                                                                   FontWeight="Bold"
+                                                                   HorizontalAlignment="Center"
+                                                                   Margin="0,2,0,0" />
+                                                    </StackPanel>
+                                                </Border>
+                                            </Grid>
+
+                                            <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,0,18,0">
+                                                <TextBlock Text="{Binding Name}"
+                                                           Foreground="#EEF3FF"
+                                                           FontSize="14"
+                                                           FontWeight="Bold"
+                                                           TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{Binding ExecutablePath}"
+                                                           Foreground="{StaticResource MutedTextBrush}"
+                                                           FontSize="10"
+                                                           Margin="0,5,0,0"
+                                                           TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <materialDesign:PackIcon Kind="ClockOutline"
+                                                                         Width="15" Height="15"
+                                                                         Foreground="#8291A9"
+                                                                         VerticalAlignment="Top"
+                                                                         Margin="0,2,8,0" />
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding CurrentSessionDisplay}"
+                                                               Foreground="#EAF0FF"
+                                                               FontSize="13"
+                                                               FontWeight="Bold" />
+                                                    <TextBlock Text="累计时长"
+                                                               Foreground="{StaticResource MutedTextBrush}"
+                                                               FontSize="10"
+                                                               Margin="0,2,0,0" />
+                                                </StackPanel>
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <materialDesign:PackIcon Kind="CalendarClock"
+                                                                         Width="15" Height="15"
+                                                                         Foreground="#8291A9"
+                                                                         VerticalAlignment="Top"
+                                                                         Margin="0,2,8,0" />
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding LastPlayedDisplay}"
+                                                               Foreground="#EAF0FF"
+                                                               FontSize="13"
+                                                               FontWeight="Bold" />
+                                                    <TextBlock Text="最后运行"
+                                                               Foreground="{StaticResource MutedTextBrush}"
+                                                               FontSize="10"
+                                                               Margin="0,2,0,0" />
+                                                </StackPanel>
+                                            </StackPanel>
+
+                                            <Button Grid.Column="5"
+                                                    Command="{Binding PlayCommand}"
+                                                    Height="32"
+                                                    Width="96"
+                                                    HorizontalAlignment="Left"
+                                                    VerticalAlignment="Center"
+                                                    Style="{StaticResource PrimaryGameButtonStyle}"
+                                                    materialDesign:ButtonAssist.CornerRadius="5">
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                    <materialDesign:PackIcon Kind="Play" Width="13" Height="13" VerticalAlignment="Center" />
+                                                    <TextBlock Text="{Binding ButtonText}" FontSize="11" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                                </StackPanel>
+                                            </Button>
+
+                                            <Button Grid.Column="6"
+                                                    Width="30" Height="30"
+                                                    Padding="0"
+                                                    Background="Transparent"
+                                                    BorderThickness="0"
+                                                    Foreground="#AEB8CC"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Click="MoreMenuButton_Click"
+                                                    ToolTip="更多操作">
+                                                <TextBlock Text="..." FontSize="16" FontWeight="Bold" VerticalAlignment="Center" />
+                                                <Button.ContextMenu>
+                                                    <ContextMenu>
+                                                        <MenuItem Header="重命名" Command="{Binding RenameCommand}" />
+                                                        <MenuItem Header="更改封面" Command="{Binding ChangeCoverCommand}" />
+                                                        <MenuItem Header="打开所在路径" Command="{Binding OpenFolderCommand}" />
+                                                        <Separator />
+                                                        <MenuItem Header="删除" Command="{Binding DeleteCommand}" Foreground="#FFEF5350" />
+                                                    </ContextMenu>
+                                                </Button.ContextMenu>
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                    </Grid>
                 </Border>
 
                 <!-- Detail Panel -->
@@ -621,14 +780,33 @@
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                         <Button Width="46" Height="32"
                                 Style="{StaticResource PrimaryGameButtonStyle}"
-                                ToolTip="网格视图">
+                                ToolTip="网格视图"
+                                Command="{Binding ShowGridViewCommand}"
+                                Visibility="{Binding IsGridView, Converter={StaticResource BoolToVisibility}}">
                             <TextBlock Text="▦" FontSize="16" Foreground="White" VerticalAlignment="Center" />
+                        </Button>
+                        <Button Width="40" Height="32"
+                                Style="{StaticResource GlassButtonStyle}"
+                                ToolTip="网格视图"
+                                Command="{Binding ShowGridViewCommand}"
+                                Visibility="{Binding IsListView, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Text="▦" FontSize="16" Foreground="#9DA9BF" VerticalAlignment="Center" />
                         </Button>
                         <Button Width="40" Height="32"
                                 Margin="6,0,0,0"
                                 Style="{StaticResource GlassButtonStyle}"
-                                ToolTip="列表视图">
+                                ToolTip="列表视图"
+                                Command="{Binding ShowListViewCommand}"
+                                Visibility="{Binding IsGridView, Converter={StaticResource BoolToVisibility}}">
                             <TextBlock Text="≡" FontSize="18" Foreground="#9DA9BF" VerticalAlignment="Center" />
+                        </Button>
+                        <Button Width="46" Height="32"
+                                Margin="6,0,0,0"
+                                Style="{StaticResource PrimaryGameButtonStyle}"
+                                ToolTip="列表视图"
+                                Command="{Binding ShowListViewCommand}"
+                                Visibility="{Binding IsListView, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Text="≡" FontSize="18" Foreground="White" VerticalAlignment="Center" />
                         </Button>
                     </StackPanel>
                 </Grid>

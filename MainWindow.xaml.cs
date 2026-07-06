@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -428,6 +429,20 @@ namespace Game_Manager
             }
 
             return false;
+        }
+
+        private void MoreMenuButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not Button button || button.ContextMenu == null)
+            {
+                return;
+            }
+
+            button.ContextMenu.DataContext = button.DataContext;
+            button.ContextMenu.PlacementTarget = button;
+            button.ContextMenu.Placement = PlacementMode.Bottom;
+            button.ContextMenu.IsOpen = true;
+            e.Handled = true;
         }
     }
 }
