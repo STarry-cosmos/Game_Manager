@@ -1,14 +1,22 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 
 namespace Game_Manager.Data
 {
+    public record CustomCategoryRecord
+    {
+        public string Key { get; init; } = string.Empty;
+        public string Name { get; init; } = string.Empty;
+    }
+
     public record SortSettings
     {
         public int SelectedSortIndex { get; init; }
         public bool IsAscending { get; init; }
         public bool IsGridView { get; init; } = true;
+        public List<CustomCategoryRecord> CustomCategories { get; init; } = new();
     }
 
     public static class AppSettingsManager

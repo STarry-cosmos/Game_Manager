@@ -488,7 +488,8 @@
                                 Height="36"
                                 Padding="0"
                                 Margin="0,12,0,0"
-                                ToolTip="添加分类">
+                                ToolTip="添加分类"
+                                Command="{Binding AddCategoryCommand}">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                 <materialDesign:PackIcon Kind="Plus" Width="14" Height="14" VerticalAlignment="Center" />
                                 <TextBlock Text="添加分类"
@@ -932,6 +933,27 @@
                                        FontWeight="Bold"
                                        TextTrimming="CharacterEllipsis"
                                        Margin="0,4,0,16" />
+
+                            <!-- Category -->
+                            <TextBlock Text="分类"
+                                       Foreground="{StaticResource MutedTextBrush}"
+                                       FontSize="12"
+                                       FontWeight="Medium" />
+                            <TextBlock Text="{Binding SelectedGame.CategoryDisplayName}"
+                                       Foreground="#EAF0FF"
+                                       FontSize="17"
+                                       FontWeight="Bold"
+                                       Margin="0,4,0,8" />
+                            <Button Command="{Binding SelectedGame.ChangeCategoryCommand}"
+                                    Style="{StaticResource MaterialDesignFlatButton}"
+                                    Content="修改"
+                                    Width="64"
+                                    Height="32"
+                                    FontSize="12"
+                                    Foreground="#4488FF"
+                                    HorizontalAlignment="Left"
+                                    Margin="0,0,0,16"
+                                    materialDesign:ButtonAssist.CornerRadius="8" />
 
                             <!-- Path -->
                             <TextBlock Text="所在路径"

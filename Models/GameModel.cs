@@ -11,6 +11,7 @@ namespace Game_Manager.Models
         public string? CoverImagePath { get; set; }
         public DateTime? LastPlayedDate { get; set; }
         public int SortOrder { get; set; }
+        public string CategoryKey { get; set; } = "uncategorized";
 
         public GameModel()
         {
@@ -27,6 +28,7 @@ namespace Game_Manager.Models
             CoverImagePath = record.CoverImagePath;
             LastPlayedDate = record.LastPlayed;
             SortOrder = record.SortOrder;
+            CategoryKey = string.IsNullOrWhiteSpace(record.CategoryKey) ? "uncategorized" : record.CategoryKey;
         }
     }
 }

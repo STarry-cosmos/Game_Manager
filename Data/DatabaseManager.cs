@@ -19,6 +19,7 @@ namespace Game_Manager.Data
         public int? ProcessId { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public int SortOrder { get; set; }
+        public string CategoryKey { get; set; } = "uncategorized";
     }
 
     public static class DatabaseManager
@@ -72,6 +73,16 @@ CREATE TABLE IF NOT EXISTS Games (
             catch
             {
             }
+
+            try
+            {
+                using var alterCommand = connection.CreateCommand();
+                alterCommand.CommandText = "ALTER TABLE Games ADD COLUMN CategoryKey TEXT NOT NULL DEFAULT 'uncategorized';";
+                alterCommand.ExecuteNonQuery();
+            }
+            catch
+            {
+            }
         }
 
         public static int InsertGame(GameRecord game)
@@ -83,8 +94,8 @@ CREATE TABLE IF NOT EXISTS Games (
 
                 using var command = connection.CreateCommand();
                 command.CommandText = @"
-INSERT INTO Games (Name, ExecutablePath, CoverImagePath, TotalPlayTime, CurrentSessionTime, LastPlayed, IsRunning, ProcessId, CreatedAt, SortOrder)
-VALUES (@Name, @ExecutablePath, @CoverImagePath, @TotalPlayTime, @CurrentSessionTime, @LastPlayed, @IsRunning, @ProcessId, @CreatedAt, @SortOrder);";
+INSERT INTO Games (Name, ExecutablePath, CoverImagePath, TotalPlayTime, CurrentSessionTime, LastPlayed, IsRunning, ProcessId, CreatedAt, SortOrder, CategoryKey)
+VALUES (@Name, @ExecutablePath, @CoverImagePath, @TotalPlayTime, @CurrentSessionTime, @LastPlayed, @IsRunning, @ProcessId, @CreatedAt, @SortOrder, @CategoryKey);";
                 command.Parameters.AddWithValue("@Name", game.Name);
                 command.Parameters.AddWithValue("@ExecutablePath", game.ExecutablePath);
                 command.Parameters.AddWithValue("@CoverImagePath", (object?)game.CoverImagePath ?? DBNull.Value);
@@ -95,6 +106,7 @@ VALUES (@Name, @ExecutablePath, @CoverImagePath, @TotalPlayTime, @CurrentSession
                 command.Parameters.AddWithValue("@ProcessId", (object?)game.ProcessId ?? DBNull.Value);
                 command.Parameters.AddWithValue("@CreatedAt", game.CreatedAt.ToString("o", CultureInfo.InvariantCulture));
                 command.Parameters.AddWithValue("@SortOrder", game.SortOrder);
+                command.Parameters.AddWithValue("@CategoryKey", string.IsNullOrWhiteSpace(game.CategoryKey) ? "uncategorized" : game.CategoryKey);
 
                 command.ExecuteNonQuery();
                 return (int)connection.LastInsertRowId;
@@ -108,7 +120,7 @@ VALUES (@Name, @ExecutablePath, @CoverImagePath, @TotalPlayTime, @CurrentSession
             connection.Open();
 
             using var command = connection.CreateCommand();
-            command.CommandText = @"SELECT Id, Name, ExecutablePath, CoverImagePath, TotalPlayTime, CurrentSessionTime, LastPlayed, IsRunning, ProcessId, CreatedAt, SortOrder FROM Games ORDER BY SortOrder, Name;";
+            command.CommandText = @"SELECT Id, Name, ExecutablePath, CoverImagePath, TotalPlayTime, CurrentSessionTime, LastPlayed, IsRunning, ProcessId, CreatedAt, SortOrder, CategoryKey FROM Games ORDER BY SortOrder, Name;";
 
             using var reader = command.ExecuteReader();
             while (reader.Read())
@@ -125,7 +137,7 @@ VALUES (@Name, @ExecutablePath, @CoverImagePath, @TotalPlayTime, @CurrentSession
             connection.Open();
 
             using var command = connection.CreateCommand();
-            command.CommandText = @"SELECT Id, Name, ExecutablePath, CoverImagePath, TotalPlayTime, CurrentSessionTime, LastPlayed, IsRunning, ProcessId, CreatedAt, SortOrder FROM Games WHERE Id = @Id;";
+            command.CommandText = @"SELECT Id, Name, ExecutablePath, CoverImagePath, TotalPlayTime, CurrentSessionTime, LastPlayed, IsRunning, ProcessId, CreatedAt, SortOrder, CategoryKey FROM Games WHERE Id = @Id;";
             command.Parameters.AddWithValue("@Id", id);
 
             using var reader = command.ExecuteReader();
@@ -139,7 +151,7 @@ VALUES (@Name, @ExecutablePath, @CoverImagePath, @TotalPlayTime, @CurrentSession
             connection.Open();
 
             using var command = connection.CreateCommand();
-            command.CommandText = @"SELECT Id, Name, ExecutablePath, CoverImagePath, TotalPlayTime, CurrentSessionTime, LastPlayed, IsRunning, ProcessId, CreatedAt, SortOrder FROM Games WHERE IsRunning = 1;";
+            command.CommandText = @"SELECT Id, Name, ExecutablePath, CoverImagePath, TotalPlayTime, CurrentSessionTime, LastPlayed, IsRunning, ProcessId, CreatedAt, SortOrder, CategoryKey FROM Games WHERE IsRunning = 1;";
 
             using var reader = command.ExecuteReader();
             while (reader.Read())
@@ -169,7 +181,8 @@ SET Name = @Name,
     IsRunning = @IsRunning,
     ProcessId = @ProcessId,
     CreatedAt = @CreatedAt,
-    SortOrder = @SortOrder
+    SortOrder = @SortOrder,
+    CategoryKey = @CategoryKey
 WHERE Id = @Id;";
                 command.Parameters.AddWithValue("@Name", game.Name);
                 command.Parameters.AddWithValue("@ExecutablePath", game.ExecutablePath);
@@ -181,6 +194,7 @@ WHERE Id = @Id;";
                 command.Parameters.AddWithValue("@ProcessId", (object?)game.ProcessId ?? DBNull.Value);
                 command.Parameters.AddWithValue("@CreatedAt", game.CreatedAt.ToString("o", CultureInfo.InvariantCulture));
                 command.Parameters.AddWithValue("@SortOrder", game.SortOrder);
+                command.Parameters.AddWithValue("@CategoryKey", string.IsNullOrWhiteSpace(game.CategoryKey) ? "uncategorized" : game.CategoryKey);
                 command.Parameters.AddWithValue("@Id", game.Id);
 
                 return command.ExecuteNonQuery() > 0;
@@ -216,7 +230,10 @@ WHERE Id = @Id;";
                 IsRunning = reader.GetInt32(7) == 1,
                 ProcessId = reader.IsDBNull(8) ? null : reader.GetInt32(8),
                 CreatedAt = DateTime.Parse(reader.GetString(9), null, DateTimeStyles.RoundtripKind),
-                SortOrder = reader.GetInt32(10)
+                SortOrder = reader.GetInt32(10),
+                CategoryKey = reader.FieldCount > 11 && !reader.IsDBNull(11)
+                    ? reader.GetString(11)
+                    : "uncategorized"
             };
 
             return game;

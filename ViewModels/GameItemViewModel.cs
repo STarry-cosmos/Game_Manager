@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Windows.Input;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -17,6 +18,9 @@ namespace Game_Manager.ViewModels
         private readonly GameModel _model;
         private readonly ProcessMonitorService _monitor;
         private readonly IDatabaseManager _db;
+        private readonly Func<IReadOnlyList<GameCategoryViewModel>> _getAssignableCategories;
+        private readonly Func<string, string> _getCategoryDisplayName;
+        private readonly Action? _onCategoryChanged;
         private readonly DispatcherTimer _uiTimer;
         private long _currentSessionSeconds;
         private long _totalPlaySeconds;
@@ -81,10 +85,26 @@ namespace Game_Manager.ViewModels
 
         public DateTime? LastPlayedDate => _model.LastPlayedDate;
 
+        public string CategoryKey
+        {
+            get => _model.CategoryKey;
+            private set
+            {
+                var normalized = string.IsNullOrWhiteSpace(value) ? GameCategories.Uncategorized : value;
+                if (_model.CategoryKey == normalized) return;
+                _model.CategoryKey = normalized;
+                OnPropertyChanged(nameof(CategoryKey));
+                OnPropertyChanged(nameof(CategoryDisplayName));
+            }
+        }
+
+        public string CategoryDisplayName => _getCategoryDisplayName(CategoryKey);
+
         public ICommand DeleteCommand { get; }
         public ICommand RenameCommand { get; }
         public ICommand OpenFolderCommand { get; }
         public ICommand ChangePathCommand { get; }
+        public ICommand ChangeCategoryCommand { get; }
 
         public event Action<GameItemViewModel>? Deleted;
         public string ButtonText => IsRunning ? "游戏中……" : "启动游戏";
@@ -120,11 +140,20 @@ namespace Game_Manager.ViewModels
 
         public void SetDisplayIndex(int displayIndex) => DisplayIndex = displayIndex;
 
-        public GameItemViewModel(GameModel model, ProcessMonitorService monitor, IDatabaseManager db)
+        public GameItemViewModel(
+            GameModel model,
+            ProcessMonitorService monitor,
+            IDatabaseManager db,
+            Func<IReadOnlyList<GameCategoryViewModel>> getAssignableCategories,
+            Func<string, string> getCategoryDisplayName,
+            Action? onCategoryChanged = null)
         {
             _model = model ?? throw new ArgumentNullException(nameof(model));
             _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
             _db = db ?? throw new ArgumentNullException(nameof(db));
+            _getAssignableCategories = getAssignableCategories ?? throw new ArgumentNullException(nameof(getAssignableCategories));
+            _getCategoryDisplayName = getCategoryDisplayName ?? throw new ArgumentNullException(nameof(getCategoryDisplayName));
+            _onCategoryChanged = onCategoryChanged;
 
             _totalPlaySeconds = _model.TotalPlayTimeSeconds;
             _currentSessionSeconds = _model.TotalPlayTimeSeconds;
@@ -140,6 +169,7 @@ namespace Game_Manager.ViewModels
             RenameCommand = new RelayCommand(ExecuteRenameCommand);
             OpenFolderCommand = new RelayCommand(ExecuteOpenFolder);
             ChangePathCommand = new RelayCommand(ExecuteChangePath);
+            ChangeCategoryCommand = new RelayCommand(ExecuteChangeCategory);
 
             _uiTimer = new DispatcherTimer(DispatcherPriority.Normal)
             {
@@ -430,6 +460,42 @@ namespace Game_Manager.ViewModels
             {
                 System.Diagnostics.Debug.WriteLine($"OpenFolder failed: {ex}");
                 System.Windows.MessageBox.Show($"打开文件夹失败：{ex.Message}", "错误", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+        }
+
+        private void ExecuteChangeCategory()
+        {
+            try
+            {
+                var dialog = new Views.ChangeCategoryWindow(_getAssignableCategories(), CategoryKey)
+                {
+                    Owner = System.Windows.Application.Current?.MainWindow
+                };
+
+                if (dialog.ShowDialog() != true || dialog.SelectedCategoryKey == CategoryKey)
+                {
+                    return;
+                }
+
+                var record = _db.GetGameById(Id);
+                if (record == null)
+                {
+                    return;
+                }
+
+                record.CategoryKey = dialog.SelectedCategoryKey;
+                if (!_db.UpdateGame(record))
+                {
+                    return;
+                }
+
+                CategoryKey = dialog.SelectedCategoryKey;
+                _onCategoryChanged?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"ChangeCategory failed: {ex}");
+                System.Windows.MessageBox.Show($"修改分类失败：{ex.Message}", "错误", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
         }
 

@@ -64,6 +64,7 @@ namespace Game_Manager.ViewModels
         };
 
         public IRelayCommand AddGameCommand { get; }
+        public IRelayCommand AddCategoryCommand { get; }
         public IRelayCommand<GameCategoryViewModel> SelectCategoryCommand { get; }
         public IRelayCommand<GameItemViewModel> SelectGameCommand { get; }
         public IRelayCommand ToggleSortDirectionCommand { get; }
@@ -207,6 +208,7 @@ namespace Game_Manager.ViewModels
 
         private readonly ProcessMonitorService _monitorService;
         private readonly IDatabaseManager _dbAdapter;
+        private SortSettings _settings = new();
 
         public MainViewModel()
         {
@@ -217,6 +219,7 @@ namespace Game_Manager.ViewModels
             RecoverRunningGameStates();
 
             AddGameCommand = new RelayCommand(AddGame);
+            AddCategoryCommand = new RelayCommand(AddCategory);
             SelectCategoryCommand = new RelayCommand<GameCategoryViewModel>(SelectCategory);
             SelectGameCommand = new RelayCommand<GameItemViewModel>(SelectGame);
             ToggleSortDirectionCommand = new RelayCommand(ToggleSortDirection);
@@ -228,14 +231,52 @@ namespace Game_Manager.ViewModels
 
         private void InitializeCategories()
         {
+            var selectedKey = SelectedCategory?.Key;
             Categories.Clear();
-            Categories.Add(new GameCategoryViewModel("all", "全部游戏", "/img/全部.png"));
-            Categories.Add(new GameCategoryViewModel("uncategorized", "未分类", "/img/未分类.png"));
-            Categories.Add(new GameCategoryViewModel("action", "动作游戏", "/img/动作游戏.png"));
-            Categories.Add(new GameCategoryViewModel("rpg", "角色扮演", "/img/角色扮演.png"));
-            Categories.Add(new GameCategoryViewModel("strategy", "策略游戏", "/img/策略游戏.png"));
-            Categories.Add(new GameCategoryViewModel("shooter", "射击游戏", "/img/射击游戏.png"));
-            SelectedCategory = Categories[0];
+
+            foreach (var category in GameCategories.Definitions)
+            {
+                Categories.Add(new GameCategoryViewModel(category.Key, category.Name, category.IconPath));
+            }
+
+            foreach (var customCategory in _settings.CustomCategories)
+            {
+                if (string.IsNullOrWhiteSpace(customCategory.Key) || string.IsNullOrWhiteSpace(customCategory.Name))
+                {
+                    continue;
+                }
+
+                if (Categories.Any(category => category.Key == customCategory.Key))
+                {
+                    continue;
+                }
+
+                Categories.Add(new GameCategoryViewModel(
+                    customCategory.Key,
+                    customCategory.Name,
+                    GameCategories.CustomCategoryIconPath));
+            }
+
+            SelectedCategory = Categories.FirstOrDefault(category => category.Key == selectedKey) ?? Categories[0];
+            NotifyCategoryDisplayChanged();
+        }
+
+        private string GetCategoryDisplayName(string? categoryKey)
+        {
+            var key = string.IsNullOrWhiteSpace(categoryKey) ? GameCategories.Uncategorized : categoryKey;
+            return Categories.FirstOrDefault(category => category.Key == key)?.Name
+                ?? GameCategories.GetDisplayName(key);
+        }
+
+        private IReadOnlyList<GameCategoryViewModel> GetAssignableCategories()
+        {
+            return Categories.Where(category => category.Key != GameCategories.All).ToList();
+        }
+
+        private void OnGameCategoryChanged()
+        {
+            ApplyCurrentSort();
+            NotifyStatsChanged();
         }
 
         private void RecoverRunningGameStates()
@@ -255,10 +296,10 @@ namespace Game_Manager.ViewModels
         {
             try
             {
-                var settings = AppSettingsManager.LoadSortSettings();
-                _selectedSortIndex = settings.SelectedSortIndex;
-                _isAscending = settings.IsAscending;
-                _isGridView = settings.IsGridView;
+                _settings = AppSettingsManager.LoadSortSettings();
+                _selectedSortIndex = _settings.SelectedSortIndex;
+                _isAscending = _settings.IsAscending;
+                _isGridView = _settings.IsGridView;
                 OnPropertyChanged(nameof(SelectedSortIndex));
                 OnPropertyChanged(nameof(IsAscending));
                 OnPropertyChanged(nameof(IsCustomSortMode));
@@ -274,13 +315,22 @@ namespace Game_Manager.ViewModels
         {
             try
             {
-                var settings = new SortSettings
+                _settings = _settings with
                 {
                     SelectedSortIndex = SelectedSortIndex,
                     IsAscending = IsAscending,
                     IsGridView = IsGridView
                 };
-                AppSettingsManager.SaveSortSettings(settings);
+                AppSettingsManager.SaveSortSettings(_settings);
+            }
+            catch { }
+        }
+
+        private void SaveCustomCategories()
+        {
+            try
+            {
+                AppSettingsManager.SaveSortSettings(_settings);
             }
             catch { }
         }
@@ -297,7 +347,13 @@ namespace Game_Manager.ViewModels
             foreach (var record in _dbAdapter.GetAllGames())
             {
                 var model = new GameModel(record);
-                var item = new GameItemViewModel(model, _monitorService, _dbAdapter);
+                var item = new GameItemViewModel(
+                    model,
+                    _monitorService,
+                    _dbAdapter,
+                    GetAssignableCategories,
+                    GetCategoryDisplayName,
+                    OnGameCategoryChanged);
                 item.Deleted += OnItemDeleted;
                 item.PropertyChanged += OnGamePropertyChanged;
                 items.Add(item);
@@ -344,11 +400,52 @@ namespace Game_Manager.ViewModels
                 TotalPlayTime = 0,
                 CurrentSessionTime = 0,
                 IsRunning = false,
-                SortOrder = _allGames.Count + 1
+                SortOrder = _allGames.Count + 1,
+                CategoryKey = GameCategories.Uncategorized
             };
 
             _dbAdapter.InsertGame(game);
             LoadGames();
+        }
+
+        private void AddCategory()
+        {
+            var dialog = new Views.AddCategoryWindow
+            {
+                Owner = System.Windows.Application.Current?.MainWindow
+            };
+
+            if (dialog.ShowDialog() != true)
+            {
+                return;
+            }
+
+            var categoryName = dialog.CategoryName;
+            if (Categories.Any(category => category.Name.Equals(categoryName, StringComparison.CurrentCultureIgnoreCase)))
+            {
+                System.Windows.MessageBox.Show("已存在同名分类", "提示", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                return;
+            }
+
+            var customCategory = new CustomCategoryRecord
+            {
+                Key = $"custom_{Guid.NewGuid():N}",
+                Name = categoryName
+            };
+
+            _settings = _settings with
+            {
+                CustomCategories = _settings.CustomCategories
+                    .Append(customCategory)
+                    .ToList()
+            };
+            SaveCustomCategories();
+
+            Categories.Add(new GameCategoryViewModel(
+                customCategory.Key,
+                customCategory.Name,
+                GameCategories.CustomCategoryIconPath));
+            NotifyCategoryDisplayChanged();
         }
 
         private void OnItemDeleted(GameItemViewModel item)
@@ -438,10 +535,15 @@ namespace Game_Manager.ViewModels
         {
             return SelectedCategory?.Key switch
             {
-                "all" => items,
-                "uncategorized" => items,
-                _ => Enumerable.Empty<GameItemViewModel>()
+                GameCategories.All => items,
+                GameCategories.Uncategorized => items.Where(game => IsUncategorized(game.CategoryKey)),
+                _ => items.Where(game => game.CategoryKey == SelectedCategory!.Key)
             };
+        }
+
+        private static bool IsUncategorized(string? categoryKey)
+        {
+            return string.IsNullOrWhiteSpace(categoryKey) || categoryKey == GameCategories.Uncategorized;
         }
 
         private List<GameItemViewModel> SortGames(IReadOnlyList<GameItemViewModel> items)
@@ -586,9 +688,9 @@ namespace Game_Manager.ViewModels
             {
                 category.CountDisplay = category.Key switch
                 {
-                    "all" => _allGames.Count.ToString(),
-                    "uncategorized" => _allGames.Count.ToString(),
-                    _ => "0"
+                    GameCategories.All => _allGames.Count.ToString(),
+                    GameCategories.Uncategorized => _allGames.Count(game => IsUncategorized(game.CategoryKey)).ToString(),
+                    _ => _allGames.Count(game => game.CategoryKey == category.Key).ToString()
                 };
             }
 
