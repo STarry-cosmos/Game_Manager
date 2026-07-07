@@ -65,3 +65,7 @@ C:\Users\STarry\Desktop\game_mananger\Game_Manager\bin\Release\net8.0-windows\Ma
 C:\Users\STarry\Desktop\game_mananger\Game_Manager\bin\Release\net8.0-windows\Microsoft.Xaml.Behaviors.dll
 C:\Users\STarry\Desktop\game_mananger\Game_Manager\obj\Release\net8.0-windows\Game_Manager_Content.g.cs
 C:\Users\STarry\Desktop\game_mananger\Game_Manager\obj\Release\net8.0-windows\App.baml
+C:\Users\STarry\Desktop\game_mananger\Game_Manager\obj\Release\net8.0-windows\Views\AddCategoryWindow.baml
+C:\Users\STarry\Desktop\game_mananger\Game_Manager\obj\Release\net8.0-windows\Views\ChangeCategoryWindow.baml
+C:\Users\STarry\Desktop\game_mananger\Game_Manager\obj\Release\net8.0-windows\Views\AddCategoryWindow.g.cs
+C:\Users\STarry\Desktop\game_mananger\Game_Manager\obj\Release\net8.0-windows\Views\ChangeCategoryWindow.g.cs

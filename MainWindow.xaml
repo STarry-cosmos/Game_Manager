@@ -505,8 +505,22 @@
                                     <Button Style="{StaticResource CategoryButtonStyle}"
                                             Command="{Binding DataContext.SelectCategoryCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                             CommandParameter="{Binding}"
+                                            Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}"
                                             Height="36"
                                             VerticalContentAlignment="Center">
+                                        <Button.ContextMenu>
+                                            <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                                                <MenuItem Header="重命名分类"
+                                                          Visibility="{Binding IsCustom, Converter={StaticResource BoolToVisibility}}"
+                                                          Command="{Binding PlacementTarget.Tag.RenameCategoryCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                          CommandParameter="{Binding}" />
+                                                <MenuItem Header="删除分类"
+                                                          Visibility="{Binding IsCustom, Converter={StaticResource BoolToVisibility}}"
+                                                          Foreground="#FFEF5350"
+                                                          Command="{Binding PlacementTarget.Tag.DeleteCategoryCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                          CommandParameter="{Binding}" />
+                                            </ContextMenu>
+                                        </Button.ContextMenu>
                                         <Grid HorizontalAlignment="Stretch"
                                               VerticalAlignment="Stretch">
                                             <Image Source="{Binding IconPath}"

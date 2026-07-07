@@ -140,6 +140,8 @@ namespace Game_Manager.ViewModels
 
         public void SetDisplayIndex(int displayIndex) => DisplayIndex = displayIndex;
 
+        public void SetCategoryKey(string categoryKey) => CategoryKey = categoryKey;
+
         public GameItemViewModel(
             GameModel model,
             ProcessMonitorService monitor,

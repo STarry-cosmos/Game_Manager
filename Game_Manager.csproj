@@ -28,4 +28,13 @@
     <Resource Include="img\未分类.png" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="temp_obj\**\*" />
+    <EmbeddedResource Remove="temp_obj\**\*" />
+    <None Remove="temp_obj\**\*" />
+    <Page Remove="temp_obj\**\*" />
+    <Resource Remove="temp_obj\**\*" />
+    <ApplicationDefinition Remove="temp_obj\**\*" />
+  </ItemGroup>
+
 </Project>

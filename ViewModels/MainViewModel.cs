@@ -24,8 +24,14 @@ namespace Game_Manager.ViewModels
     public class GameCategoryViewModel : ObservableObject
     {
         public string Key { get; }
-        public string Name { get; }
+        private string _name;
+        public string Name
+        {
+            get => _name;
+            set => SetProperty(ref _name, value);
+        }
         public string? IconPath { get; }
+        public bool IsCustom => Key.StartsWith("custom_", StringComparison.Ordinal);
 
         private string _countDisplay = "0";
         public string CountDisplay
@@ -44,7 +50,7 @@ namespace Game_Manager.ViewModels
         public GameCategoryViewModel(string key, string name, string? iconPath = null)
         {
             Key = key;
-            Name = name;
+            _name = name;
             IconPath = iconPath;
         }
     }
@@ -65,6 +71,8 @@ namespace Game_Manager.ViewModels
 
         public IRelayCommand AddGameCommand { get; }
         public IRelayCommand AddCategoryCommand { get; }
+        public IRelayCommand<GameCategoryViewModel> RenameCategoryCommand { get; }
+        public IRelayCommand<GameCategoryViewModel> DeleteCategoryCommand { get; }
         public IRelayCommand<GameCategoryViewModel> SelectCategoryCommand { get; }
         public IRelayCommand<GameItemViewModel> SelectGameCommand { get; }
         public IRelayCommand ToggleSortDirectionCommand { get; }
@@ -220,6 +228,8 @@ namespace Game_Manager.ViewModels
 
             AddGameCommand = new RelayCommand(AddGame);
             AddCategoryCommand = new RelayCommand(AddCategory);
+            RenameCategoryCommand = new RelayCommand<GameCategoryViewModel>(RenameCategory);
+            DeleteCategoryCommand = new RelayCommand<GameCategoryViewModel>(DeleteCategory);
             SelectCategoryCommand = new RelayCommand<GameCategoryViewModel>(SelectCategory);
             SelectGameCommand = new RelayCommand<GameItemViewModel>(SelectGame);
             ToggleSortDirectionCommand = new RelayCommand(ToggleSortDirection);
@@ -446,6 +456,98 @@ namespace Game_Manager.ViewModels
                 customCategory.Name,
                 GameCategories.CustomCategoryIconPath));
             NotifyCategoryDisplayChanged();
+        }
+
+        private void RenameCategory(GameCategoryViewModel? category)
+        {
+            if (category == null || !category.IsCustom)
+            {
+                return;
+            }
+
+            var dialog = new Views.RenameCategoryWindow(category.Name)
+            {
+                Owner = System.Windows.Application.Current?.MainWindow
+            };
+
+            if (dialog.ShowDialog() != true)
+            {
+                return;
+            }
+
+            var newName = dialog.NewName.Trim();
+            if (string.IsNullOrWhiteSpace(newName) || newName.Equals(category.Name, StringComparison.CurrentCulture))
+            {
+                return;
+            }
+
+            if (Categories.Any(item => !ReferenceEquals(item, category) &&
+                                       item.Name.Equals(newName, StringComparison.CurrentCultureIgnoreCase)))
+            {
+                System.Windows.MessageBox.Show("已存在同名分类", "提示", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                return;
+            }
+
+            category.Name = newName;
+            _settings = _settings with
+            {
+                CustomCategories = _settings.CustomCategories
+                    .Select(item => item.Key == category.Key ? item with { Name = newName } : item)
+                    .ToList()
+            };
+            SaveCustomCategories();
+            OnPropertyChanged(nameof(CurrentCategoryName));
+        }
+
+        private void DeleteCategory(GameCategoryViewModel? category)
+        {
+            if (category == null || !category.IsCustom)
+            {
+                return;
+            }
+
+            var result = System.Windows.MessageBox.Show(
+                $"确认删除分类：{category.Name}？\n该分类下的游戏将自动归为未分类。",
+                "删除分类",
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Warning);
+
+            if (result != System.Windows.MessageBoxResult.Yes)
+            {
+                return;
+            }
+
+            foreach (var game in _allGames.Where(item => item.CategoryKey == category.Key))
+            {
+                var record = _dbAdapter.GetGameById(game.Id);
+                if (record == null)
+                {
+                    continue;
+                }
+
+                record.CategoryKey = GameCategories.Uncategorized;
+                if (_dbAdapter.UpdateGame(record))
+                {
+                    game.SetCategoryKey(GameCategories.Uncategorized);
+                }
+            }
+
+            _settings = _settings with
+            {
+                CustomCategories = _settings.CustomCategories
+                    .Where(item => item.Key != category.Key)
+                    .ToList()
+            };
+            SaveCustomCategories();
+
+            if (ReferenceEquals(SelectedCategory, category))
+            {
+                SelectedCategory = Categories.FirstOrDefault(item => item.Key == GameCategories.Uncategorized) ?? Categories.FirstOrDefault();
+            }
+
+            Categories.Remove(category);
+            ApplyCurrentSort();
+            NotifyStatsChanged();
         }
 
         private void OnItemDeleted(GameItemViewModel item)

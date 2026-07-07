@@ -27,6 +27,7 @@ namespace Game_Manager.Data
         private static readonly object DbLock = new();
         private static readonly string DbFilePath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "GameLauncher",
             "GameLauncher.db");
         private static readonly string ConnectionString = new SQLiteConnectionStringBuilder
         {
