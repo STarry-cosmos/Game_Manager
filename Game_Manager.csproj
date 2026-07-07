@@ -17,4 +17,15 @@
     <PackageReference Include="System.Drawing.Common" Version="7.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Resource Include="img\网格.png" />
+    <Resource Include="img\全部.png" />
+    <Resource Include="img\分类.png" />
+    <Resource Include="img\动作游戏.png" />
+    <Resource Include="img\角色扮演.png" />
+    <Resource Include="img\策略游戏.png" />
+    <Resource Include="img\射击游戏.png" />
+    <Resource Include="img\未分类.png" />
+  </ItemGroup>
+
 </Project>

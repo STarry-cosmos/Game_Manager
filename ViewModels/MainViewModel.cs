@@ -21,11 +21,40 @@ namespace Game_Manager.ViewModels
         Custom = 3
     }
 
+    public class GameCategoryViewModel : ObservableObject
+    {
+        public string Key { get; }
+        public string Name { get; }
+        public string? IconPath { get; }
+
+        private string _countDisplay = "0";
+        public string CountDisplay
+        {
+            get => _countDisplay;
+            set => SetProperty(ref _countDisplay, value);
+        }
+
+        private bool _isSelected;
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set => SetProperty(ref _isSelected, value);
+        }
+
+        public GameCategoryViewModel(string key, string name, string? iconPath = null)
+        {
+            Key = key;
+            Name = name;
+            IconPath = iconPath;
+        }
+    }
+
     public partial class MainViewModel : ObservableObject
     {
         private readonly List<GameItemViewModel> _allGames = new();
 
         public ObservableCollection<GameItemViewModel> Games { get; } = new();
+        public ObservableCollection<GameCategoryViewModel> Categories { get; } = new();
         public ObservableCollection<string> SortOptions { get; } = new()
         {
             "按名称",
@@ -35,10 +64,37 @@ namespace Game_Manager.ViewModels
         };
 
         public IRelayCommand AddGameCommand { get; }
+        public IRelayCommand<GameCategoryViewModel> SelectCategoryCommand { get; }
         public IRelayCommand<GameItemViewModel> SelectGameCommand { get; }
         public IRelayCommand ToggleSortDirectionCommand { get; }
         public IRelayCommand ShowGridViewCommand { get; }
         public IRelayCommand ShowListViewCommand { get; }
+
+        private GameCategoryViewModel? _selectedCategory;
+        public GameCategoryViewModel? SelectedCategory
+        {
+            get => _selectedCategory;
+            private set
+            {
+                if (_selectedCategory == value) return;
+
+                if (_selectedCategory != null)
+                {
+                    _selectedCategory.IsSelected = false;
+                }
+
+                _selectedCategory = value;
+
+                if (_selectedCategory != null)
+                {
+                    _selectedCategory.IsSelected = true;
+                }
+
+                OnPropertyChanged(nameof(SelectedCategory));
+                OnPropertyChanged(nameof(CurrentCategoryName));
+                OnPropertyChanged(nameof(CurrentCategoryGameCountDisplay));
+            }
+        }
 
         private GameItemViewModel? _selectedGame;
         public GameItemViewModel? SelectedGame
@@ -111,6 +167,15 @@ namespace Game_Manager.ViewModels
         public string SortDirectionLabel => IsCustomSortMode ? (IsCustomDragEnabled ? "手动中" : "手动") : (IsAscending ? "升序" : "降序");
         public string TotalGameCountDisplay => $"共 {_allGames.Count} 个游戏";
         public string TotalGameTimeDisplay => $"总游戏时长 {FormatDuration(_allGames.Sum(game => game.TotalPlayTimeSeconds))}";
+        public string CurrentCategoryName => SelectedCategory?.Name ?? "全部游戏";
+        public string CurrentCategoryGameCountDisplay => $"({Games.Count})";
+
+        private bool _isCategorySidebarCollapsed;
+        public bool IsCategorySidebarCollapsed
+        {
+            get => _isCategorySidebarCollapsed;
+            set => SetProperty(ref _isCategorySidebarCollapsed, value);
+        }
 
         private bool _isGridView = true;
         public bool IsGridView
@@ -152,11 +217,25 @@ namespace Game_Manager.ViewModels
             RecoverRunningGameStates();
 
             AddGameCommand = new RelayCommand(AddGame);
+            SelectCategoryCommand = new RelayCommand<GameCategoryViewModel>(SelectCategory);
             SelectGameCommand = new RelayCommand<GameItemViewModel>(SelectGame);
             ToggleSortDirectionCommand = new RelayCommand(ToggleSortDirection);
             ShowGridViewCommand = new RelayCommand(() => SetViewMode(true));
             ShowListViewCommand = new RelayCommand(() => SetViewMode(false));
+            InitializeCategories();
             LoadGames();
+        }
+
+        private void InitializeCategories()
+        {
+            Categories.Clear();
+            Categories.Add(new GameCategoryViewModel("all", "全部游戏", "/img/全部.png"));
+            Categories.Add(new GameCategoryViewModel("uncategorized", "未分类", "/img/未分类.png"));
+            Categories.Add(new GameCategoryViewModel("action", "动作游戏", "/img/动作游戏.png"));
+            Categories.Add(new GameCategoryViewModel("rpg", "角色扮演", "/img/角色扮演.png"));
+            Categories.Add(new GameCategoryViewModel("strategy", "策略游戏", "/img/策略游戏.png"));
+            Categories.Add(new GameCategoryViewModel("shooter", "射击游戏", "/img/射击游戏.png"));
+            SelectedCategory = Categories[0];
         }
 
         private void RecoverRunningGameStates()
@@ -300,6 +379,17 @@ namespace Game_Manager.ViewModels
             SelectedGame = game;
         }
 
+        private void SelectCategory(GameCategoryViewModel? category)
+        {
+            if (category == null || SelectedCategory == category)
+            {
+                return;
+            }
+
+            SelectedCategory = category;
+            ApplyCurrentSort();
+        }
+
         private void ToggleSortDirection()
         {
             if (IsCustomSortMode)
@@ -321,6 +411,7 @@ namespace Game_Manager.ViewModels
                 Games.Add(game);
             }
             UpdateDisplayIndexes();
+            NotifyCategoryDisplayChanged();
 
             if (IsCustomSortMode && string.IsNullOrWhiteSpace(SearchText))
             {
@@ -330,16 +421,27 @@ namespace Game_Manager.ViewModels
 
         private List<GameItemViewModel> FilterGames(IEnumerable<GameItemViewModel> items)
         {
+            var categoryItems = FilterGamesByCategory(items);
             if (string.IsNullOrWhiteSpace(SearchText))
             {
-                return items.ToList();
+                return categoryItems.ToList();
             }
 
             var keyword = SearchText.Trim();
-            return items.Where(game =>
+            return categoryItems.Where(game =>
                     game.Name.Contains(keyword, StringComparison.CurrentCultureIgnoreCase) ||
                     game.ExecutablePath.Contains(keyword, StringComparison.CurrentCultureIgnoreCase))
                 .ToList();
+        }
+
+        private IEnumerable<GameItemViewModel> FilterGamesByCategory(IEnumerable<GameItemViewModel> items)
+        {
+            return SelectedCategory?.Key switch
+            {
+                "all" => items,
+                "uncategorized" => items,
+                _ => Enumerable.Empty<GameItemViewModel>()
+            };
         }
 
         private List<GameItemViewModel> SortGames(IReadOnlyList<GameItemViewModel> items)
@@ -475,6 +577,22 @@ namespace Game_Manager.ViewModels
         {
             OnPropertyChanged(nameof(TotalGameCountDisplay));
             OnPropertyChanged(nameof(TotalGameTimeDisplay));
+            NotifyCategoryDisplayChanged();
+        }
+
+        private void NotifyCategoryDisplayChanged()
+        {
+            foreach (var category in Categories)
+            {
+                category.CountDisplay = category.Key switch
+                {
+                    "all" => _allGames.Count.ToString(),
+                    "uncategorized" => _allGames.Count.ToString(),
+                    _ => "0"
+                };
+            }
+
+            OnPropertyChanged(nameof(CurrentCategoryGameCountDisplay));
         }
 
         private static string FormatDuration(long totalSeconds)

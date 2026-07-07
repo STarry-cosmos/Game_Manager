@@ -10,6 +10,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
@@ -28,6 +29,8 @@ namespace Game_Manager
         private Point _dragStartPoint;
         private bool _isDragging;
         private GameItemViewModel? _dragTargetGame;
+        private const double CategorySidebarExpandedWidth = 190;
+        private const double CategorySidebarCollapsedWidth = 64;
 
         public MainWindow()
         {
@@ -186,6 +189,36 @@ namespace Game_Manager
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
             Close();
+        }
+
+        private void ToggleCategorySidebarButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is not MainViewModel viewModel)
+            {
+                return;
+            }
+
+            viewModel.IsCategorySidebarCollapsed = !viewModel.IsCategorySidebarCollapsed;
+            AnimateCategorySidebarWidth(viewModel.IsCategorySidebarCollapsed
+                ? CategorySidebarCollapsedWidth
+                : CategorySidebarExpandedWidth);
+        }
+
+        private void AnimateCategorySidebarWidth(double targetWidth)
+        {
+            var startWidth = double.IsNaN(CategorySidebar.Width)
+                ? CategorySidebar.ActualWidth
+                : CategorySidebar.Width;
+
+            var animation = new DoubleAnimation
+            {
+                From = startWidth,
+                To = targetWidth,
+                Duration = TimeSpan.FromMilliseconds(240),
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut }
+            };
+
+            CategorySidebar.BeginAnimation(WidthProperty, animation, HandoffBehavior.SnapshotAndReplace);
         }
 
         private void Card_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
