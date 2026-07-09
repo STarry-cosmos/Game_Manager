@@ -498,3 +498,5 @@ C:\Users\STarry\Desktop\game_mananger\Game_Manager\obj\Release\net8.0-windows\wi
 C:\Users\STarry\Desktop\game_mananger\Game_Manager\obj\Release\net8.0-windows\win-x86\Views\ChangeCategoryWindow.baml
 C:\Users\STarry\Desktop\game_mananger\Game_Manager\obj\Release\net8.0-windows\win-x86\Views\AddCategoryWindow.g.cs
 C:\Users\STarry\Desktop\game_mananger\Game_Manager\obj\Release\net8.0-windows\win-x86\Views\ChangeCategoryWindow.g.cs
+C:\Users\STarry\Desktop\game_mananger\Game_Manager\obj\Release\net8.0-windows\win-x86\Views\RenameCategoryWindow.baml
+C:\Users\STarry\Desktop\game_mananger\Game_Manager\obj\Release\net8.0-windows\win-x86\Views\RenameCategoryWindow.g.cs

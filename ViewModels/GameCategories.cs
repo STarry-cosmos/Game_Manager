@@ -7,6 +7,7 @@ namespace Game_Manager.ViewModels
     {
         public const string All = "all";
         public const string Uncategorized = "uncategorized";
+        public const string Archived = "archived";
         public const string CustomCategoryIconPath = "/img/未分类.png";
 
         public static IReadOnlyList<(string Key, string Name, string? IconPath)> Definitions { get; } = new List<(string, string, string?)>
@@ -16,7 +17,8 @@ namespace Game_Manager.ViewModels
             ("action", "动作游戏", "/img/动作游戏.png"),
             ("rpg", "角色扮演", "/img/角色扮演.png"),
             ("strategy", "策略游戏", "/img/策略游戏.png"),
-            ("shooter", "射击游戏", "/img/射击游戏.png")
+            ("shooter", "射击游戏", "/img/射击游戏.png"),
+            (Archived, "已归档", null)
         };
 
         public static string GetDisplayName(string? categoryKey)
@@ -28,7 +30,7 @@ namespace Game_Manager.ViewModels
 
         public static IEnumerable<(string Key, string Name, string? IconPath)> GetAssignable()
         {
-            return Definitions.Where(category => category.Key != All);
+            return Definitions.Where(category => category.Key != All && category.Key != Archived);
         }
     }
 }

@@ -84,6 +84,7 @@ namespace Game_Manager.ViewModels
         }
 
         public DateTime? LastPlayedDate => _model.LastPlayedDate;
+        public DateTime AddedAt => _model.AddedAt;
 
         public string CategoryKey
         {
@@ -105,6 +106,8 @@ namespace Game_Manager.ViewModels
         public ICommand OpenFolderCommand { get; }
         public ICommand ChangePathCommand { get; }
         public ICommand ChangeCategoryCommand { get; }
+        public ICommand ArchiveCommand { get; }
+        public ICommand RestoreArchiveCommand { get; }
 
         public event Action<GameItemViewModel>? Deleted;
         public string ButtonText => IsRunning ? "游戏中……" : "启动游戏";
@@ -113,16 +116,98 @@ namespace Game_Manager.ViewModels
 
         public string CurrentSessionDisplay => FormatDuration(_currentSessionSeconds);
 
+        public string TotalPlayTimeCompactDisplay
+        {
+            get
+            {
+                var duration = TimeSpan.FromSeconds(Math.Max(0, TotalPlayTimeSeconds));
+                return $"{(long)duration.TotalHours}h {duration.Minutes:D2}m";
+            }
+        }
+
         public string LastPlayedDisplay
         {
             get
             {
                 var date = _model.LastPlayedDate;
-                return date.HasValue ? date.Value.ToString("yyyy.MM.dd") : "未运行";
+                return date.HasValue ? date.Value.ToLocalTime().ToString("yyyy.MM.dd") : "未运行";
             }
         }
 
+        public string FirstPlayedDisplay => _model.AddedAt.ToLocalTime().ToString("yyyy.MM.dd");
+
+        public string AddedAtDisplay => _model.AddedAt.ToLocalTime().ToString("yyyy.MM.dd");
+
+        public bool IsArchived
+        {
+            get => _model.IsArchived;
+            private set
+            {
+                if (_model.IsArchived == value) return;
+                _model.IsArchived = value;
+                OnPropertyChanged(nameof(IsArchived));
+                OnPropertyChanged(nameof(ArchiveStatusDisplay));
+            }
+        }
+
+        public DateTime? ArchivedAt
+        {
+            get => _model.ArchivedAt;
+            private set
+            {
+                if (_model.ArchivedAt == value) return;
+                _model.ArchivedAt = value;
+                OnPropertyChanged(nameof(ArchivedAt));
+                OnPropertyChanged(nameof(ArchivedAtDisplay));
+                OnPropertyChanged(nameof(ArchivedAtListDisplay));
+            }
+        }
+
+        public string ArchivedAtDisplay => ArchivedAt.HasValue
+            ? ArchivedAt.Value.ToLocalTime().ToString("yyyy.MM.dd")
+            : "—";
+
+        public string ArchivedAtListDisplay => ArchivedAt.HasValue
+            ? $"归档于 {ArchivedAt.Value.ToLocalTime():yyyy.MM.dd}"
+            : "归档于 —";
+
+        public int UserRating
+        {
+            get => _model.UserRating;
+            private set
+            {
+                var clamped = Math.Clamp(value, 0, 5);
+                if (_model.UserRating == clamped) return;
+                _model.UserRating = clamped;
+                OnPropertyChanged(nameof(UserRating));
+                OnPropertyChanged(nameof(IsStar1Filled));
+                OnPropertyChanged(nameof(IsStar2Filled));
+                OnPropertyChanged(nameof(IsStar3Filled));
+                OnPropertyChanged(nameof(IsStar4Filled));
+                OnPropertyChanged(nameof(IsStar5Filled));
+                OnPropertyChanged(nameof(MedalTierText));
+                OnPropertyChanged(nameof(IsGoldMedal));
+                OnPropertyChanged(nameof(IsSilverMedal));
+                OnPropertyChanged(nameof(IsBronzeMedal));
+            }
+        }
+
+        public bool IsStar1Filled => UserRating >= 1;
+        public bool IsStar2Filled => UserRating >= 2;
+        public bool IsStar3Filled => UserRating >= 3;
+        public bool IsStar4Filled => UserRating >= 4;
+        public bool IsStar5Filled => UserRating >= 5;
+
+        /// <summary>5 星金、4 星银、3 星及以下铜。</summary>
+        public string MedalTierText => UserRating >= 5 ? "金" : UserRating == 4 ? "银" : "铜";
+        public bool IsGoldMedal => UserRating >= 5;
+        public bool IsSilverMedal => UserRating == 4;
+        public bool IsBronzeMedal => UserRating <= 3;
+
+        public string ArchiveStatusDisplay => IsArchived ? "已归档" : "未归档";
+
         public ICommand PlayCommand { get; }
+        public ICommand SetRatingCommand { get; }
 
         private bool _isDropTarget;
         public bool IsDropTarget
@@ -172,6 +257,9 @@ namespace Game_Manager.ViewModels
             OpenFolderCommand = new RelayCommand(ExecuteOpenFolder);
             ChangePathCommand = new RelayCommand(ExecuteChangePath);
             ChangeCategoryCommand = new RelayCommand(ExecuteChangeCategory);
+            ArchiveCommand = new RelayCommand(ExecuteArchive, () => !IsArchived);
+            RestoreArchiveCommand = new RelayCommand(ExecuteRestoreArchive, () => IsArchived);
+            SetRatingCommand = new RelayCommand<object?>(ExecuteSetRating);
 
             _uiTimer = new DispatcherTimer(DispatcherPriority.Normal)
             {
@@ -184,6 +272,7 @@ namespace Game_Manager.ViewModels
                     var elapsed = _totalPlaySeconds + _model.CurrentSessionTimeSeconds + (long)(DateTime.UtcNow - _sessionStartUtc.Value).TotalSeconds;
                     _currentSessionSeconds = elapsed;
                     OnPropertyChanged(nameof(CurrentSessionDisplay));
+                    OnPropertyChanged(nameof(TotalPlayTimeCompactDisplay));
                 }
             };
 
@@ -306,6 +395,7 @@ namespace Game_Manager.ViewModels
                     try { _uiTimer.Stop(); } catch { }
                     (PlayCommand as RelayCommand)?.NotifyCanExecuteChanged();
                     OnPropertyChanged(nameof(CurrentSessionDisplay));
+                    OnPropertyChanged(nameof(TotalPlayTimeCompactDisplay));
                     OnPropertyChanged(nameof(LastPlayedDisplay));
                     OnPropertyChanged(nameof(ButtonText));
                 });
@@ -319,6 +409,7 @@ namespace Game_Manager.ViewModels
                 try { _uiTimer.Stop(); } catch { }
                 (PlayCommand as RelayCommand)?.NotifyCanExecuteChanged();
                 OnPropertyChanged(nameof(CurrentSessionDisplay));
+                OnPropertyChanged(nameof(TotalPlayTimeCompactDisplay));
                 OnPropertyChanged(nameof(LastPlayedDisplay));
                 OnPropertyChanged(nameof(ButtonText));
             }
@@ -539,6 +630,114 @@ namespace Game_Manager.ViewModels
             {
                 System.Diagnostics.Debug.WriteLine($"ChangePath failed: {ex}");
                 System.Windows.MessageBox.Show($"修改路径失败：{ex.Message}", "错误", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+        }
+
+        private void ExecuteArchive()
+        {
+            if (IsArchived)
+            {
+                return;
+            }
+
+            if (IsRunning)
+            {
+                System.Windows.MessageBox.Show("运行中的游戏暂时不能归档。", "提示", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                return;
+            }
+
+            SetArchivedState(true);
+        }
+
+        private void ExecuteRestoreArchive()
+        {
+            if (!IsArchived)
+            {
+                return;
+            }
+
+            SetArchivedState(false);
+        }
+
+        private void SetArchivedState(bool isArchived)
+        {
+            try
+            {
+                var rec = _db.GetGameById(Id);
+                if (rec == null)
+                {
+                    return;
+                }
+
+                rec.IsArchived = isArchived;
+                rec.ArchivedAt = isArchived ? DateTime.UtcNow : null;
+                if (!_db.UpdateGame(rec))
+                {
+                    return;
+                }
+
+                IsArchived = isArchived;
+                ArchivedAt = rec.ArchivedAt;
+                (ArchiveCommand as RelayCommand)?.NotifyCanExecuteChanged();
+                (RestoreArchiveCommand as RelayCommand)?.NotifyCanExecuteChanged();
+                _onCategoryChanged?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"SetArchivedState failed: {ex}");
+                System.Windows.MessageBox.Show($"归档操作失败：{ex.Message}", "错误", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+        }
+
+        private void ExecuteSetRating(object? parameter)
+        {
+            try
+            {
+                if (!TryParseRating(parameter, out var rating))
+                {
+                    return;
+                }
+
+                var clamped = Math.Clamp(rating, 0, 5);
+                if (UserRating == clamped)
+                {
+                    return;
+                }
+
+                var rec = _db.GetGameById(Id);
+                if (rec == null)
+                {
+                    return;
+                }
+
+                rec.UserRating = clamped;
+                if (!_db.UpdateGame(rec))
+                {
+                    return;
+                }
+
+                UserRating = clamped;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"SetRating failed: {ex}");
+                System.Windows.MessageBox.Show($"评分保存失败：{ex.Message}", "错误", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+        }
+
+        private static bool TryParseRating(object? parameter, out int rating)
+        {
+            switch (parameter)
+            {
+                case int value:
+                    rating = value;
+                    return true;
+                case string text when int.TryParse(text, out var parsed):
+                    rating = parsed;
+                    return true;
+                default:
+                    rating = 0;
+                    return false;
             }
         }
 

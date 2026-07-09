@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -26,6 +26,7 @@
     <Resource Include="img\策略游戏.png" />
     <Resource Include="img\射击游戏.png" />
     <Resource Include="img\未分类.png" />
+    <Resource Include="img\档案.jpg" />
   </ItemGroup>
 
   <ItemGroup>

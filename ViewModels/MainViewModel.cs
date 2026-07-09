@@ -71,6 +71,7 @@ namespace Game_Manager.ViewModels
 
         public IRelayCommand AddGameCommand { get; }
         public IRelayCommand AddCategoryCommand { get; }
+        public IRelayCommand OpenSettingsCommand { get; }
         public IRelayCommand<GameCategoryViewModel> RenameCategoryCommand { get; }
         public IRelayCommand<GameCategoryViewModel> DeleteCategoryCommand { get; }
         public IRelayCommand<GameCategoryViewModel> SelectCategoryCommand { get; }
@@ -102,6 +103,11 @@ namespace Game_Manager.ViewModels
                 OnPropertyChanged(nameof(SelectedCategory));
                 OnPropertyChanged(nameof(CurrentCategoryName));
                 OnPropertyChanged(nameof(CurrentCategoryGameCountDisplay));
+                OnPropertyChanged(nameof(IsArchiveView));
+                OnPropertyChanged(nameof(TotalGameCountDisplay));
+                OnPropertyChanged(nameof(TotalGameTimeDisplay));
+                OnPropertyChanged(nameof(ArchiveGameCount));
+                OnPropertyChanged(nameof(ArchiveTotalHoursDisplay));
             }
         }
 
@@ -174,10 +180,25 @@ namespace Game_Manager.ViewModels
         public bool IsCustomSortMode => SelectedSortIndex == (int)GameSortMode.Custom;
         public bool IsSortDirectionEnabled => true;
         public string SortDirectionLabel => IsCustomSortMode ? (IsCustomDragEnabled ? "手动中" : "手动") : (IsAscending ? "升序" : "降序");
-        public string TotalGameCountDisplay => $"共 {_allGames.Count} 个游戏";
-        public string TotalGameTimeDisplay => $"总游戏时长 {FormatDuration(_allGames.Sum(game => game.TotalPlayTimeSeconds))}";
+        public string TotalGameCountDisplay => IsArchiveView
+            ? $"共 {_allGames.Count(game => game.IsArchived)} 个已归档游戏"
+            : $"共 {_allGames.Count(game => !game.IsArchived)} 个游戏";
+        public string TotalGameTimeDisplay => IsArchiveView
+            ? $"归档游戏时长 {FormatDuration(_allGames.Where(game => game.IsArchived).Sum(game => game.TotalPlayTimeSeconds))}"
+            : $"总游戏时长 {FormatDuration(_allGames.Where(game => !game.IsArchived).Sum(game => game.TotalPlayTimeSeconds))}";
         public string CurrentCategoryName => SelectedCategory?.Name ?? "全部游戏";
         public string CurrentCategoryGameCountDisplay => $"({Games.Count})";
+        public bool IsArchiveView => SelectedCategory?.Key == GameCategories.Archived;
+        public int ArchiveGameCount => _allGames.Count(game => game.IsArchived);
+        public string ArchiveTotalHoursDisplay
+        {
+            get
+            {
+                var totalSeconds = _allGames.Where(game => game.IsArchived).Sum(game => game.TotalPlayTimeSeconds);
+                var hours = (long)TimeSpan.FromSeconds(Math.Max(0, totalSeconds)).TotalHours;
+                return hours.ToString("N0");
+            }
+        }
 
         private bool _isCategorySidebarCollapsed;
         public bool IsCategorySidebarCollapsed
@@ -228,6 +249,7 @@ namespace Game_Manager.ViewModels
 
             AddGameCommand = new RelayCommand(AddGame);
             AddCategoryCommand = new RelayCommand(AddCategory);
+            OpenSettingsCommand = new RelayCommand(OpenSettings);
             RenameCategoryCommand = new RelayCommand<GameCategoryViewModel>(RenameCategory);
             DeleteCategoryCommand = new RelayCommand<GameCategoryViewModel>(DeleteCategory);
             SelectCategoryCommand = new RelayCommand<GameCategoryViewModel>(SelectCategory);
@@ -244,7 +266,7 @@ namespace Game_Manager.ViewModels
             var selectedKey = SelectedCategory?.Key;
             Categories.Clear();
 
-            foreach (var category in GameCategories.Definitions)
+            foreach (var category in GameCategories.Definitions.Where(item => item.Key != GameCategories.Archived))
             {
                 Categories.Add(new GameCategoryViewModel(category.Key, category.Name, category.IconPath));
             }
@@ -267,8 +289,27 @@ namespace Game_Manager.ViewModels
                     GameCategories.CustomCategoryIconPath));
             }
 
+            var archivedCategory = GameCategories.Definitions.First(item => item.Key == GameCategories.Archived);
+            Categories.Add(new GameCategoryViewModel(
+                archivedCategory.Key,
+                archivedCategory.Name,
+                archivedCategory.IconPath));
+
             SelectedCategory = Categories.FirstOrDefault(category => category.Key == selectedKey) ?? Categories[0];
             NotifyCategoryDisplayChanged();
+        }
+
+        private int GetArchivedCategoryIndex()
+        {
+            for (var index = 0; index < Categories.Count; index++)
+            {
+                if (Categories[index].Key == GameCategories.Archived)
+                {
+                    return index;
+                }
+            }
+
+            return Categories.Count;
         }
 
         private string GetCategoryDisplayName(string? categoryKey)
@@ -280,7 +321,9 @@ namespace Game_Manager.ViewModels
 
         private IReadOnlyList<GameCategoryViewModel> GetAssignableCategories()
         {
-            return Categories.Where(category => category.Key != GameCategories.All).ToList();
+            return Categories
+                .Where(category => category.Key != GameCategories.All && category.Key != GameCategories.Archived)
+                .ToList();
         }
 
         private void OnGameCategoryChanged()
@@ -411,7 +454,8 @@ namespace Game_Manager.ViewModels
                 CurrentSessionTime = 0,
                 IsRunning = false,
                 SortOrder = _allGames.Count + 1,
-                CategoryKey = GameCategories.Uncategorized
+                CategoryKey = GameCategories.Uncategorized,
+                IsArchived = false
             };
 
             _dbAdapter.InsertGame(game);
@@ -451,11 +495,21 @@ namespace Game_Manager.ViewModels
             };
             SaveCustomCategories();
 
-            Categories.Add(new GameCategoryViewModel(
+            Categories.Insert(GetArchivedCategoryIndex(), new GameCategoryViewModel(
                 customCategory.Key,
                 customCategory.Name,
                 GameCategories.CustomCategoryIconPath));
             NotifyCategoryDisplayChanged();
+        }
+
+        private void OpenSettings()
+        {
+            var dialog = new Views.SettingsWindow
+            {
+                Owner = System.Windows.Application.Current?.MainWindow,
+                DataContext = this
+            };
+            dialog.ShowDialog();
         }
 
         private void RenameCategory(GameCategoryViewModel? category)
@@ -612,6 +666,11 @@ namespace Game_Manager.ViewModels
             UpdateDisplayIndexes();
             NotifyCategoryDisplayChanged();
 
+            if (SelectedGame != null && !Games.Contains(SelectedGame))
+            {
+                SelectedGame = null;
+            }
+
             if (IsCustomSortMode && string.IsNullOrWhiteSpace(SearchText))
             {
                 PersistCustomOrder();
@@ -635,11 +694,17 @@ namespace Game_Manager.ViewModels
 
         private IEnumerable<GameItemViewModel> FilterGamesByCategory(IEnumerable<GameItemViewModel> items)
         {
+            if (IsArchiveView)
+            {
+                return items.Where(game => game.IsArchived);
+            }
+
+            var activeItems = items.Where(game => !game.IsArchived);
             return SelectedCategory?.Key switch
             {
-                GameCategories.All => items,
-                GameCategories.Uncategorized => items.Where(game => IsUncategorized(game.CategoryKey)),
-                _ => items.Where(game => game.CategoryKey == SelectedCategory!.Key)
+                GameCategories.All => activeItems,
+                GameCategories.Uncategorized => activeItems.Where(game => IsUncategorized(game.CategoryKey)),
+                _ => activeItems.Where(game => game.CategoryKey == SelectedCategory!.Key)
             };
         }
 
@@ -771,9 +836,12 @@ namespace Game_Manager.ViewModels
 
         private void OnGamePropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName is nameof(GameItemViewModel.CurrentSessionDisplay) or nameof(GameItemViewModel.IsRunning))
+            if (e.PropertyName is nameof(GameItemViewModel.CurrentSessionDisplay)
+                or nameof(GameItemViewModel.IsRunning)
+                or nameof(GameItemViewModel.TotalPlayTimeCompactDisplay))
             {
                 OnPropertyChanged(nameof(TotalGameTimeDisplay));
+                OnPropertyChanged(nameof(ArchiveTotalHoursDisplay));
             }
         }
 
@@ -781,6 +849,8 @@ namespace Game_Manager.ViewModels
         {
             OnPropertyChanged(nameof(TotalGameCountDisplay));
             OnPropertyChanged(nameof(TotalGameTimeDisplay));
+            OnPropertyChanged(nameof(ArchiveGameCount));
+            OnPropertyChanged(nameof(ArchiveTotalHoursDisplay));
             NotifyCategoryDisplayChanged();
         }
 
@@ -790,9 +860,10 @@ namespace Game_Manager.ViewModels
             {
                 category.CountDisplay = category.Key switch
                 {
-                    GameCategories.All => _allGames.Count.ToString(),
-                    GameCategories.Uncategorized => _allGames.Count(game => IsUncategorized(game.CategoryKey)).ToString(),
-                    _ => _allGames.Count(game => game.CategoryKey == category.Key).ToString()
+                    GameCategories.All => _allGames.Count(game => !game.IsArchived).ToString(),
+                    GameCategories.Archived => _allGames.Count(game => game.IsArchived).ToString(),
+                    GameCategories.Uncategorized => _allGames.Count(game => !game.IsArchived && IsUncategorized(game.CategoryKey)).ToString(),
+                    _ => _allGames.Count(game => !game.IsArchived && game.CategoryKey == category.Key).ToString()
                 };
             }
 

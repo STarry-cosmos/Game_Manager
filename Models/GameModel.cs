@@ -10,8 +10,12 @@ namespace Game_Manager.Models
         public bool IsRunning { get; set; }
         public string? CoverImagePath { get; set; }
         public DateTime? LastPlayedDate { get; set; }
+        public DateTime AddedAt { get; set; }
         public int SortOrder { get; set; }
         public string CategoryKey { get; set; } = "uncategorized";
+        public bool IsArchived { get; set; }
+        public DateTime? ArchivedAt { get; set; }
+        public int UserRating { get; set; }
 
         public GameModel()
         {
@@ -27,8 +31,12 @@ namespace Game_Manager.Models
             IsRunning = record.IsRunning;
             CoverImagePath = record.CoverImagePath;
             LastPlayedDate = record.LastPlayed;
+            AddedAt = record.CreatedAt;
             SortOrder = record.SortOrder;
             CategoryKey = string.IsNullOrWhiteSpace(record.CategoryKey) ? "uncategorized" : record.CategoryKey;
+            IsArchived = record.IsArchived;
+            ArchivedAt = record.ArchivedAt;
+            UserRating = Math.Clamp(record.UserRating, 0, 5);
         }
     }
 }
