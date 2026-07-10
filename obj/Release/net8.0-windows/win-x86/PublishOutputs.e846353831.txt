@@ -1,8 +1,0 @@
-C:\Users\STarry\Desktop\Game_Manager.pdb
-C:\Users\STarry\Desktop\D3DCompiler_47_cor3.dll
-C:\Users\STarry\Desktop\PenImc_cor3.dll
-C:\Users\STarry\Desktop\PresentationNative_cor3.dll
-C:\Users\STarry\Desktop\vcruntime140_cor3.dll
-C:\Users\STarry\Desktop\wpfgfx_cor3.dll
-C:\Users\STarry\Desktop\e_sqlite3.dll
-C:\Users\STarry\Desktop\Game_Manager.exe

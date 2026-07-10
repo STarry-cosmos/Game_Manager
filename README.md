@@ -48,7 +48,8 @@
 
 - Windows 10 / 11
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)（开发与编译）
-- 运行已发布版本时，需安装对应的 [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0)
+- 运行时，需安装对应的 [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0)
+- 发行版解压即可运行(应该)
 
 ## 快速开始
 
