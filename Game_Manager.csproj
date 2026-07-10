@@ -27,6 +27,9 @@
     <Resource Include="img\射击游戏.png" />
     <Resource Include="img\未分类.png" />
     <Resource Include="img\档案.jpg" />
+    <Resource Include="img\golden.png" />
+    <Resource Include="img\silver.png" />
+    <Resource Include="img\copper.png" />
   </ItemGroup>
 
   <ItemGroup>

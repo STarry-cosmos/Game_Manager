@@ -72,6 +72,7 @@ namespace Game_Manager.ViewModels
         public IRelayCommand AddGameCommand { get; }
         public IRelayCommand AddCategoryCommand { get; }
         public IRelayCommand OpenSettingsCommand { get; }
+        public IRelayCommand OpenDatabaseFolderCommand { get; }
         public IRelayCommand<GameCategoryViewModel> RenameCategoryCommand { get; }
         public IRelayCommand<GameCategoryViewModel> DeleteCategoryCommand { get; }
         public IRelayCommand<GameCategoryViewModel> SelectCategoryCommand { get; }
@@ -79,6 +80,8 @@ namespace Game_Manager.ViewModels
         public IRelayCommand ToggleSortDirectionCommand { get; }
         public IRelayCommand ShowGridViewCommand { get; }
         public IRelayCommand ShowListViewCommand { get; }
+
+        public string DatabaseDirectoryDisplay => DatabaseManager.DatabaseDirectoryPath;
 
         private GameCategoryViewModel? _selectedCategory;
         public GameCategoryViewModel? SelectedCategory
@@ -250,6 +253,7 @@ namespace Game_Manager.ViewModels
             AddGameCommand = new RelayCommand(AddGame);
             AddCategoryCommand = new RelayCommand(AddCategory);
             OpenSettingsCommand = new RelayCommand(OpenSettings);
+            OpenDatabaseFolderCommand = new RelayCommand(OpenDatabaseFolder);
             RenameCategoryCommand = new RelayCommand<GameCategoryViewModel>(RenameCategory);
             DeleteCategoryCommand = new RelayCommand<GameCategoryViewModel>(DeleteCategory);
             SelectCategoryCommand = new RelayCommand<GameCategoryViewModel>(SelectCategory);
@@ -510,6 +514,40 @@ namespace Game_Manager.ViewModels
                 DataContext = this
             };
             dialog.ShowDialog();
+        }
+
+        private void OpenDatabaseFolder()
+        {
+            try
+            {
+                DatabaseManager.InitializeDatabase();
+
+                var databasePath = DatabaseManager.DatabaseFilePath;
+                var directoryPath = DatabaseManager.DatabaseDirectoryPath;
+                if (string.IsNullOrWhiteSpace(directoryPath) || !Directory.Exists(directoryPath))
+                {
+                    System.Windows.MessageBox.Show("无法找到数据库所在目录。", "错误",
+                        System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                    return;
+                }
+
+                var arguments = File.Exists(databasePath)
+                    ? $"/select,\"{databasePath}\""
+                    : $"\"{directoryPath}\"";
+
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "explorer.exe",
+                    Arguments = arguments,
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"OpenDatabaseFolder failed: {ex}");
+                System.Windows.MessageBox.Show($"打开数据库目录失败：{ex.Message}", "错误",
+                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
         }
 
         private void RenameCategory(GameCategoryViewModel? category)

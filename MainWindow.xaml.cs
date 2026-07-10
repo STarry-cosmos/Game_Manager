@@ -31,6 +31,8 @@ namespace Game_Manager
         private GameItemViewModel? _dragTargetGame;
         private const double CategorySidebarExpandedWidth = 190;
         private const double CategorySidebarCollapsedWidth = 64;
+        private const double ArchiveBackgroundExpandedHeight = 350;
+        private MainViewModel? _boundViewModel;
 
         public MainWindow()
         {
@@ -39,6 +41,98 @@ namespace Game_Manager
             StateChanged += MainWindow_StateChanged;
             SizeChanged += MainWindow_SizeChanged;
             ContentBorder.SizeChanged += ContentBorder_SizeChanged;
+            CategorySidebar.SizeChanged += CategorySidebar_SizeChanged;
+            DataContextChanged += MainWindow_DataContextChanged;
+            Loaded += MainWindow_Loaded;
+        }
+
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            AttachViewModel(DataContext as MainViewModel);
+            UpdateArchiveBackgroundPanel(animate: false);
+            UpdateCategorySidebarClip();
+        }
+
+        private void MainWindow_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            AttachViewModel(e.NewValue as MainViewModel);
+            if (IsLoaded)
+            {
+                UpdateArchiveBackgroundPanel(animate: false);
+            }
+        }
+
+        private void AttachViewModel(MainViewModel? viewModel)
+        {
+            if (_boundViewModel != null)
+            {
+                _boundViewModel.PropertyChanged -= ViewModel_PropertyChanged;
+            }
+
+            _boundViewModel = viewModel;
+            if (_boundViewModel != null)
+            {
+                _boundViewModel.PropertyChanged += ViewModel_PropertyChanged;
+            }
+        }
+
+        private void ViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName is nameof(MainViewModel.IsArchiveView)
+                or nameof(MainViewModel.IsCategorySidebarCollapsed))
+            {
+                UpdateArchiveBackgroundPanel(animate: true);
+            }
+        }
+
+        private void UpdateArchiveBackgroundPanel(bool animate)
+        {
+            if (ArchiveBackgroundPanel == null)
+            {
+                return;
+            }
+
+            var shouldExpand = _boundViewModel is { IsArchiveView: true, IsCategorySidebarCollapsed: false };
+            var targetHeight = shouldExpand ? ArchiveBackgroundExpandedHeight : 0;
+            // 抵消分类栏 Padding=10，使背景图贴齐左右与底部边缘
+            var targetMargin = shouldExpand
+                ? new Thickness(-10, 6, -10, -10)
+                : new Thickness(0);
+
+            if (!animate)
+            {
+                ArchiveBackgroundPanel.BeginAnimation(HeightProperty, null);
+                ArchiveBackgroundPanel.Height = targetHeight;
+                ArchiveBackgroundPanel.Margin = targetMargin;
+                UpdateCategorySidebarClip();
+                return;
+            }
+
+            var currentHeight = double.IsNaN(ArchiveBackgroundPanel.Height)
+                ? ArchiveBackgroundPanel.ActualHeight
+                : ArchiveBackgroundPanel.Height;
+
+            var heightAnimation = new DoubleAnimation
+            {
+                From = currentHeight,
+                To = targetHeight,
+                Duration = TimeSpan.FromMilliseconds(280),
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut }
+            };
+
+            var marginAnimation = new ThicknessAnimation
+            {
+                To = targetMargin,
+                Duration = TimeSpan.FromMilliseconds(280),
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut }
+            };
+
+            ArchiveBackgroundPanel.BeginAnimation(HeightProperty, heightAnimation, HandoffBehavior.SnapshotAndReplace);
+            ArchiveBackgroundPanel.BeginAnimation(MarginProperty, marginAnimation, HandoffBehavior.SnapshotAndReplace);
+
+            // 高度动画过程中同步更新分类栏圆角裁剪，避免图片直角溢出
+            heightAnimation.CurrentTimeInvalidated += (_, _) => UpdateCategorySidebarClip();
+            heightAnimation.Completed += (_, _) => UpdateCategorySidebarClip();
         }
 
         private void MainWindow_SourceInitialized(object? sender, EventArgs e)
@@ -128,6 +222,35 @@ namespace Game_Manager
             {
                 clip.Rect = new Rect(0, 0, ContentBorder.ActualWidth, ContentBorder.ActualHeight);
             }
+        }
+
+        private void CategorySidebar_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            UpdateCategorySidebarClip();
+        }
+
+        private void UpdateCategorySidebarClip()
+        {
+            if (CategorySidebar == null || CategorySidebar.ActualWidth <= 0 || CategorySidebar.ActualHeight <= 0)
+            {
+                return;
+            }
+
+            const double radius = 12;
+            if (CategorySidebar.Clip is RectangleGeometry existing)
+            {
+                existing.Rect = new Rect(0, 0, CategorySidebar.ActualWidth, CategorySidebar.ActualHeight);
+                existing.RadiusX = radius;
+                existing.RadiusY = radius;
+                return;
+            }
+
+            CategorySidebar.Clip = new RectangleGeometry
+            {
+                Rect = new Rect(0, 0, CategorySidebar.ActualWidth, CategorySidebar.ActualHeight),
+                RadiusX = radius,
+                RadiusY = radius
+            };
         }
 
         private void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e)

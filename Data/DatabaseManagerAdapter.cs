@@ -18,5 +18,11 @@ namespace Game_Manager.Data
         public bool UpdateGame(GameRecord game) => DatabaseManager.UpdateGame(game);
 
         public bool DeleteGame(int id) => DatabaseManager.DeleteGame(id);
+
+        public List<MemorySceneRecord> GetMemoryScenes(int gameId) => DatabaseManager.GetMemoryScenes(gameId);
+
+        public int InsertMemoryScene(MemorySceneRecord scene) => DatabaseManager.InsertMemoryScene(scene);
+
+        public bool DeleteMemoryScene(int id) => DatabaseManager.DeleteMemoryScene(id);
     }
 }

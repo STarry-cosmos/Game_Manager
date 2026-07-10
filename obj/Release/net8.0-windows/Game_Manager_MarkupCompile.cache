@@ -10,11 +10,11 @@ none
 false
 TRACE;RELEASE;NET;NET8_0;NETCOREAPP
 C:\Users\STarry\Desktop\game_mananger\Game_Manager\App.xaml
-5163870016
+62111194316
 22-1126602754
-182113888401
+20456590330
 207451980528
-MainWindow.xaml;Views\AddCategoryWindow.xaml;Views\ChangeCategoryWindow.xaml;Views\RenameCategoryWindow.xaml;Views\RenameWindow.xaml;
+MainWindow.xaml;Views\AddCategoryWindow.xaml;Views\ChangeCategoryWindow.xaml;Views\RenameCategoryWindow.xaml;Views\RenameWindow.xaml;Views\SettingsWindow.xaml;
 
 False
 

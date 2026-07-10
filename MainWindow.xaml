@@ -6,6 +6,7 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:viewModels="clr-namespace:Game_Manager.ViewModels"
         xmlns:converters="clr-namespace:Game_Manager.Converters"
+        xmlns:helpers="clr-namespace:Game_Manager.Helpers"
         mc:Ignorable="d"
         Title="Game Manager"
         Height="800" Width="1200"
@@ -327,6 +328,15 @@
             </Style.Triggers>
         </Style>
 
+        <Style x:Key="ArchiveSidebarDockStyle" TargetType="StackPanel">
+            <Setter Property="Visibility" Value="Visible" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsCategorySidebarCollapsed}" Value="True">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
         <Style x:Key="ArchiveSidebarVisualStyle" TargetType="Border">
             <Setter Property="Visibility" Value="Visible" />
             <Style.Triggers>
@@ -336,7 +346,7 @@
             </Style.Triggers>
         </Style>
 
-        <Style x:Key="CategorySidebarExpandedPanelStyle" TargetType="Grid">
+        <Style x:Key="CategorySidebarExpandedPanelStyle" TargetType="ScrollViewer">
             <Setter Property="Visibility" Value="Visible" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsCategorySidebarCollapsed}" Value="True">
@@ -599,6 +609,34 @@
             <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="6" />
         </Style>
 
+        <Style x:Key="MemorySceneNavButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="28" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Background" Value="#99141B28" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="14">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#CC1A2333" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.3" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="ArchiveListRowStyle" TargetType="Border">
             <Setter Property="Margin" Value="0,0,0,10" />
             <Setter Property="Padding" Value="14,12" />
@@ -625,17 +663,6 @@
             <Setter Property="CornerRadius" Value="4,4,8,8" />
             <Setter Property="Background" Value="{StaticResource ArchiveRankMutedBrush}" />
             <Setter Property="VerticalAlignment" Value="Center" />
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding DisplayIndex}" Value="1">
-                    <Setter Property="Background" Value="{StaticResource ArchiveGoldBrush}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding DisplayIndex}" Value="2">
-                    <Setter Property="Background" Value="{StaticResource ArchiveSilverBrush}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding DisplayIndex}" Value="3">
-                    <Setter Property="Background" Value="{StaticResource ArchiveBronzeBrush}" />
-                </DataTrigger>
-            </Style.Triggers>
         </Style>
 
         <Style x:Key="ArchiveRankTextStyle" TargetType="TextBlock">
@@ -644,61 +671,37 @@
             <Setter Property="FontWeight" Value="Bold" />
             <Setter Property="HorizontalAlignment" Value="Center" />
             <Setter Property="VerticalAlignment" Value="Center" />
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding DisplayIndex}" Value="1">
-                    <Setter Property="Foreground" Value="#1A1408" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding DisplayIndex}" Value="2">
-                    <Setter Property="Foreground" Value="#1A1E24" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding DisplayIndex}" Value="3">
-                    <Setter Property="Foreground" Value="#1A1208" />
-                </DataTrigger>
-            </Style.Triggers>
         </Style>
 
-        <Style x:Key="ArchiveMedalPlaceholderStyle" TargetType="Border">
+        <Style x:Key="ArchiveGridRankBadgeStyle" TargetType="Border">
+            <Setter Property="Width" Value="22" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="CornerRadius" Value="0,0,6,6" />
+            <Setter Property="Margin" Value="10,0,0,0" />
+            <Setter Property="Background" Value="{StaticResource ArchiveRankMutedBrush}" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+        </Style>
+
+        <Style x:Key="ArchiveListMedalImageStyle" TargetType="Image">
             <Setter Property="Width" Value="48" />
             <Setter Property="Height" Value="48" />
-            <Setter Property="CornerRadius" Value="24" />
-            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="Stretch" Value="Uniform" />
             <Setter Property="HorizontalAlignment" Value="Center" />
             <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="Background" Value="#1A140C" />
-            <Setter Property="BorderBrush" Value="{StaticResource ArchiveBronzeBrush}" />
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsGoldMedal}" Value="True">
-                    <Setter Property="Background" Value="#241C10" />
-                    <Setter Property="BorderBrush" Value="{StaticResource ArchiveGoldBrush}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding IsSilverMedal}" Value="True">
-                    <Setter Property="Background" Value="#1A1E24" />
-                    <Setter Property="BorderBrush" Value="{StaticResource ArchiveSilverBrush}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding IsBronzeMedal}" Value="True">
-                    <Setter Property="Background" Value="#1A140C" />
-                    <Setter Property="BorderBrush" Value="{StaticResource ArchiveBronzeBrush}" />
-                </DataTrigger>
-            </Style.Triggers>
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Setter Property="RenderOptions.BitmapScalingMode" Value="HighQuality" />
         </Style>
 
-        <Style x:Key="ArchiveMedalTextStyle" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="16" />
-            <Setter Property="FontWeight" Value="Bold" />
-            <Setter Property="HorizontalAlignment" Value="Center" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="Foreground" Value="{StaticResource ArchiveBronzeBrush}" />
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsGoldMedal}" Value="True">
-                    <Setter Property="Foreground" Value="{StaticResource ArchiveGoldBrush}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding IsSilverMedal}" Value="True">
-                    <Setter Property="Foreground" Value="{StaticResource ArchiveSilverBrush}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding IsBronzeMedal}" Value="True">
-                    <Setter Property="Foreground" Value="{StaticResource ArchiveBronzeBrush}" />
-                </DataTrigger>
-            </Style.Triggers>
+        <Style x:Key="ArchiveGridMedalImageStyle" TargetType="Image">
+            <Setter Property="Width" Value="38" />
+            <Setter Property="Height" Value="38" />
+            <Setter Property="Stretch" Value="Uniform" />
+            <Setter Property="HorizontalAlignment" Value="Right" />
+            <Setter Property="VerticalAlignment" Value="Bottom" />
+            <Setter Property="Margin" Value="8,0,0,0" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Setter Property="RenderOptions.BitmapScalingMode" Value="HighQuality" />
         </Style>
 
         <Style x:Key="ArchiveViewToggleActiveStyle" TargetType="Button">
@@ -758,6 +761,7 @@
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Setter Property="helpers:CornerRadiusClip.Enabled" Value="True" />
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="BorderBrush" Value="{StaticResource ArchiveGoldBrush}" />
@@ -771,51 +775,6 @@
                 <DataTrigger Binding="{Binding IsDropTarget}" Value="True">
                     <Setter Property="BorderBrush" Value="{StaticResource ArchiveGoldBrush}" />
                     <Setter Property="Background" Value="#1A2118" />
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-
-        <Style x:Key="ArchiveGridMedalBadgeStyle" TargetType="Border">
-            <Setter Property="Width" Value="28" />
-            <Setter Property="Height" Value="28" />
-            <Setter Property="CornerRadius" Value="14" />
-            <Setter Property="BorderThickness" Value="1.5" />
-            <Setter Property="HorizontalAlignment" Value="Right" />
-            <Setter Property="VerticalAlignment" Value="Top" />
-            <Setter Property="Margin" Value="0,8,8,0" />
-            <Setter Property="Background" Value="#CC1A140C" />
-            <Setter Property="BorderBrush" Value="{StaticResource ArchiveBronzeBrush}" />
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsGoldMedal}" Value="True">
-                    <Setter Property="Background" Value="#CC241C10" />
-                    <Setter Property="BorderBrush" Value="{StaticResource ArchiveGoldBrush}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding IsSilverMedal}" Value="True">
-                    <Setter Property="Background" Value="#CC1A1E24" />
-                    <Setter Property="BorderBrush" Value="{StaticResource ArchiveSilverBrush}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding IsBronzeMedal}" Value="True">
-                    <Setter Property="Background" Value="#CC1A140C" />
-                    <Setter Property="BorderBrush" Value="{StaticResource ArchiveBronzeBrush}" />
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-
-        <Style x:Key="ArchiveGridMedalTextStyle" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="11" />
-            <Setter Property="FontWeight" Value="Bold" />
-            <Setter Property="HorizontalAlignment" Value="Center" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="Foreground" Value="{StaticResource ArchiveBronzeBrush}" />
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsGoldMedal}" Value="True">
-                    <Setter Property="Foreground" Value="{StaticResource ArchiveGoldBrush}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding IsSilverMedal}" Value="True">
-                    <Setter Property="Foreground" Value="{StaticResource ArchiveSilverBrush}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding IsBronzeMedal}" Value="True">
-                    <Setter Property="Foreground" Value="{StaticResource ArchiveBronzeBrush}" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -1020,14 +979,9 @@
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
+                            <RowDefinition Height="*" MinHeight="0" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-
-                        <Border Grid.Row="2"
-                                CornerRadius="10"
-                                Background="#071121"
-                                Opacity="0.35" />
 
                         <StackPanel Grid.Row="0" Margin="0,0,0,6">
                             <Button Height="34"
@@ -1066,31 +1020,20 @@
                                        Style="{StaticResource CategorySidebarTextStyle}" />
                         </StackPanel>
 
-                        <Grid Grid.Row="1"
-                              Margin="0,2,0,10"
-                              Style="{StaticResource CategorySidebarExpandedPanelStyle}">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="*" MinHeight="0" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-
-                            <ScrollViewer Grid.Row="0"
-                                          VerticalScrollBarVisibility="Hidden"
-                                          HorizontalScrollBarVisibility="Disabled"
-                                          Focusable="False">
-                                <ItemsControl ItemsSource="{Binding Categories}"
-                                              ItemTemplate="{StaticResource CategorySidebarItemTemplate}"
-                                              ItemContainerStyle="{StaticResource CategorySidebarScrollItemContainerStyle}" />
-                            </ScrollViewer>
-
-                            <ItemsControl Grid.Row="1"
-                                          ItemsSource="{Binding Categories}"
+                        <!-- 分类区域：可滚动、无滚动条，不与底部归档区重叠 -->
+                        <ScrollViewer Grid.Row="1"
+                                      Margin="0,2,0,8"
+                                      VerticalScrollBarVisibility="Hidden"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      Focusable="False"
+                                      Style="{StaticResource CategorySidebarExpandedPanelStyle}">
+                            <ItemsControl ItemsSource="{Binding Categories}"
                                           ItemTemplate="{StaticResource CategorySidebarItemTemplate}"
-                                          ItemContainerStyle="{StaticResource CategorySidebarArchivedItemContainerStyle}" />
-                        </Grid>
+                                          ItemContainerStyle="{StaticResource CategorySidebarScrollItemContainerStyle}" />
+                        </ScrollViewer>
 
                         <ScrollViewer Grid.Row="1"
-                                      Margin="0,2,0,10"
+                                      Margin="0,2,0,8"
                                       VerticalScrollBarVisibility="Hidden"
                                       HorizontalScrollBarVisibility="Disabled"
                                       Style="{StaticResource CategorySidebarCollapsedPanelStyle}">
@@ -1098,51 +1041,53 @@
                                           ItemTemplate="{StaticResource CategorySidebarItemTemplate}" />
                         </ScrollViewer>
 
-                        <Border Grid.Row="2"
-                                Height="192"
-                                CornerRadius="12"
-                                ClipToBounds="True"
-                                Background="#0E192B"
-                                BorderThickness="0"
-                                Style="{StaticResource ArchiveSidebarVisualStyle}">
-                            <Grid>
-                                <Image Source="/img/档案.jpg"
-                                       Stretch="UniformToFill"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center"
-                                       Opacity="0.9"
-                                       RenderOptions.BitmapScalingMode="HighQuality" />
-                                <!-- 顶部羽化：与侧栏同色深色渐隐，避免泛白 -->
-                                <Rectangle>
-                                    <Rectangle.Fill>
-                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                            <GradientStop Color="#FF0E192B" Offset="0" />
-                                            <GradientStop Color="#E60E192B" Offset="0.12" />
-                                            <GradientStop Color="#990E192B" Offset="0.28" />
-                                            <GradientStop Color="#330E192B" Offset="0.48" />
-                                            <GradientStop Color="#000E192B" Offset="0.68" />
-                                        </LinearGradientBrush>
-                                    </Rectangle.Fill>
-                                </Rectangle>
-                                
-                                <!-- 四周暗角：纯深色，不用白色透明 -->
+                        <!-- 归档区域：未选中时按钮固定底部且隐藏背景图；选中后展开并显示背景图 -->
+                        <StackPanel Grid.Row="2"
+                                    Style="{StaticResource ArchiveSidebarDockStyle}">
+                            <ItemsControl ItemsSource="{Binding Categories}"
+                                          ItemTemplate="{StaticResource CategorySidebarItemTemplate}"
+                                          ItemContainerStyle="{StaticResource CategorySidebarArchivedItemContainerStyle}" />
 
-
-                                <Rectangle VerticalAlignment="Bottom" Height="150">
-                                    <Rectangle.Fill>
-                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                            <!-- 注意这里 StartPoint 和 EndPoint 决定了渐变从上往下 -->
-                                            <!-- Offset 0.0 是顶部，Offset 1.0 是底部 -->
-                                            <GradientStop Color="#000E192B" Offset="0.0" />
-                                            <GradientStop Color="#330E192B" Offset="0.3" />
-                                            <GradientStop Color="#990E192B" Offset="0.6" />
-                                            <GradientStop Color="#E60E192B" Offset="0.85" />
-                                            <GradientStop Color="#FF0E192B" Offset="1.0" />
-                                        </LinearGradientBrush>
-                                    </Rectangle.Fill>
-                                </Rectangle>
-                            </Grid>
-                        </Border>
+                            <Border x:Name="ArchiveBackgroundPanel"
+                                    Height="0"
+                                    CornerRadius="0,0,12,12"
+                                    ClipToBounds="True"
+                                    Background="#0E192B"
+                                    BorderThickness="0"
+                                    Margin="0"
+                                    Style="{StaticResource ArchiveSidebarVisualStyle}">
+                                <Grid>
+                                    <Image Source="/img/档案.jpg"
+                                           Stretch="UniformToFill"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           Opacity="0.9"
+                                           RenderOptions.BitmapScalingMode="HighQuality" />
+                                    <Rectangle>
+                                        <Rectangle.Fill>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                <GradientStop Color="#FF0E192B" Offset="0" />
+                                                <GradientStop Color="#E60E192B" Offset="0.12" />
+                                                <GradientStop Color="#990E192B" Offset="0.28" />
+                                                <GradientStop Color="#330E192B" Offset="0.48" />
+                                                <GradientStop Color="#000E192B" Offset="0.68" />
+                                            </LinearGradientBrush>
+                                        </Rectangle.Fill>
+                                    </Rectangle>
+                                    <Rectangle VerticalAlignment="Bottom" Height="150">
+                                        <Rectangle.Fill>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                <GradientStop Color="#000E192B" Offset="0.0" />
+                                                <GradientStop Color="#330E192B" Offset="0.3" />
+                                                <GradientStop Color="#990E192B" Offset="0.6" />
+                                                <GradientStop Color="#E60E192B" Offset="0.85" />
+                                                <GradientStop Color="#FF0E192B" Offset="1.0" />
+                                            </LinearGradientBrush>
+                                        </Rectangle.Fill>
+                                    </Rectangle>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
                     </Grid>
                 </Border>
 
@@ -1210,7 +1155,7 @@
                                     Orientation="Horizontal"
                                     VerticalAlignment="Center"
                                     Margin="16,0,18,0">
-                            <TextBlock Text="共 "
+                            <TextBlock Text="共收藏 "
                                        Foreground="{StaticResource ArchiveMutedBrush}"
                                        FontSize="12"
                                        VerticalAlignment="Center" />
@@ -1228,7 +1173,7 @@
                                     Margin="10,0"
                                     Background="#3A4558"
                                     VerticalAlignment="Center" />
-                            <TextBlock Text="累计游玩时长 "
+                            <TextBlock Text="累计陪伴你 "
                                        Foreground="{StaticResource ArchiveMutedBrush}"
                                        FontSize="12"
                                        VerticalAlignment="Center" />
@@ -1509,8 +1454,9 @@
                                         <StackPanel>
                                             <Grid Height="124" ClipToBounds="True">
                                                 <Border CornerRadius="12,12,0,0"
-                                                        ClipToBounds="True"
-                                                        Background="#0B1020">
+                                                        Background="#0B1020"
+                                                        helpers:CornerRadiusClip.Enabled="True"
+                                                        SnapsToDevicePixels="True">
                                                     <Image Source="{Binding CoverImage}"
                                                            Stretch="UniformToFill"
                                                            SnapsToDevicePixels="True"
@@ -1518,37 +1464,10 @@
                                                            RenderOptions.BitmapScalingMode="HighQuality" />
                                                 </Border>
 
-                                                <Border Width="22"
-                                                        Height="28"
-                                                        CornerRadius="0,0,6,6"
-                                                        Margin="10,0,0,0"
-                                                        HorizontalAlignment="Left"
-                                                        VerticalAlignment="Top">
-                                                    <Border.Style>
-                                                        <Style TargetType="Border">
-                                                            <Setter Property="Background" Value="{StaticResource ArchiveRankMutedBrush}" />
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding DisplayIndex}" Value="1">
-                                                                    <Setter Property="Background" Value="{StaticResource ArchiveGoldBrush}" />
-                                                                </DataTrigger>
-                                                                <DataTrigger Binding="{Binding DisplayIndex}" Value="2">
-                                                                    <Setter Property="Background" Value="{StaticResource ArchiveSilverBrush}" />
-                                                                </DataTrigger>
-                                                                <DataTrigger Binding="{Binding DisplayIndex}" Value="3">
-                                                                    <Setter Property="Background" Value="{StaticResource ArchiveBronzeBrush}" />
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </Border.Style>
+                                                <Border Style="{StaticResource ArchiveGridRankBadgeStyle}">
                                                     <TextBlock Text="{Binding DisplayIndex}"
                                                                Style="{StaticResource ArchiveRankTextStyle}"
                                                                FontSize="11" />
-                                                </Border>
-
-                                                <Border Style="{StaticResource ArchiveGridMedalBadgeStyle}"
-                                                        ToolTip="{Binding MedalTierText, StringFormat=评级：{0}}">
-                                                    <TextBlock Text="{Binding MedalTierText}"
-                                                               Style="{StaticResource ArchiveGridMedalTextStyle}" />
                                                 </Border>
                                             </Grid>
 
@@ -1559,14 +1478,28 @@
                                                            FontWeight="Bold"
                                                            TextTrimming="CharacterEllipsis"
                                                            ToolTip="{Binding Name}" />
-                                                <TextBlock Text="{Binding TotalPlayTimeCompactDisplay}"
-                                                           Margin="0,6,0,0"
-                                                           Foreground="{StaticResource ArchiveMutedBrush}"
-                                                           FontSize="11" />
-                                                <TextBlock Text="{Binding ArchivedAtListDisplay}"
-                                                           Margin="0,3,0,0"
-                                                           Foreground="{StaticResource ArchiveMutedBrush}"
-                                                           FontSize="11" />
+
+                                                <Grid Margin="0,6,0,0">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <StackPanel Grid.Column="0" VerticalAlignment="Bottom">
+                                                        <TextBlock Text="{Binding TotalPlayTimeCompactDisplay}"
+                                                                   Foreground="{StaticResource ArchiveMutedBrush}"
+                                                                   FontSize="11" />
+                                                        <TextBlock Text="{Binding ArchivedAtListDisplay}"
+                                                                   Margin="0,3,0,0"
+                                                                   Foreground="{StaticResource ArchiveMutedBrush}"
+                                                                   FontSize="11" />
+                                                    </StackPanel>
+
+                                                    <Image Grid.Column="1"
+                                                           Source="{Binding MedalImagePath}"
+                                                           Style="{StaticResource ArchiveGridMedalImageStyle}"
+                                                           ToolTip="{Binding MedalTierText, StringFormat=评级：{0}}" />
+                                                </Grid>
 
                                                 <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                                                     <materialDesign:PackIcon Width="12" Height="12" Margin="0,0,2,0">
@@ -1894,12 +1827,13 @@
                                                     Width="118"
                                                     Height="66"
                                                     CornerRadius="6"
-                                                    ClipToBounds="True"
                                                     Background="#0B1020"
                                                     BorderBrush="#324055"
                                                     BorderThickness="1"
                                                     HorizontalAlignment="Left"
-                                                    VerticalAlignment="Center">
+                                                    VerticalAlignment="Center"
+                                                    helpers:CornerRadiusClip.Enabled="True"
+                                                    SnapsToDevicePixels="True">
                                                 <Image Source="{Binding CoverImage}"
                                                        Stretch="UniformToFill"
                                                        SnapsToDevicePixels="True"
@@ -1996,12 +1930,10 @@
                                                 </StackPanel>
                                             </StackPanel>
 
-                                            <Border Grid.Column="3"
-                                                    Style="{StaticResource ArchiveMedalPlaceholderStyle}"
-                                                    ToolTip="{Binding MedalTierText, StringFormat=评级：{0}}">
-                                                <TextBlock Text="{Binding MedalTierText}"
-                                                           Style="{StaticResource ArchiveMedalTextStyle}" />
-                                            </Border>
+                                            <Image Grid.Column="3"
+                                                   Source="{Binding MedalImagePath}"
+                                                   Style="{StaticResource ArchiveListMedalImageStyle}"
+                                                   ToolTip="{Binding MedalTierText, StringFormat=评级：{0}}" />
                                         </Grid>
                                     </Border>
                                 </DataTemplate>
@@ -2038,21 +1970,20 @@
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
 
-                                    <Grid Width="147" Height="83" ClipToBounds="True">
-                                        <Border CornerRadius="7"
-                                                Background="#0B1020"
-                                                BorderBrush="#32486E"
-                                                BorderThickness="1"
-                                                ClipToBounds="True">
-                                            <Image Source="{Binding SelectedGame.CoverImage}"
-                                                   Width="147"
-                                                   Height="83"
-                                                   Stretch="UniformToFill"
-                                                   SnapsToDevicePixels="True"
-                                                   VerticalAlignment="Top"
-                                                   RenderOptions.BitmapScalingMode="HighQuality" />
-                                        </Border>
-                                    </Grid>
+                                    <Border Width="147"
+                                            Height="83"
+                                            CornerRadius="7"
+                                            Background="#0B1020"
+                                            BorderBrush="#32486E"
+                                            BorderThickness="1"
+                                            helpers:CornerRadiusClip.Enabled="True"
+                                            SnapsToDevicePixels="True">
+                                        <Image Source="{Binding SelectedGame.CoverImage}"
+                                               Stretch="UniformToFill"
+                                               SnapsToDevicePixels="True"
+                                               VerticalAlignment="Top"
+                                               RenderOptions.BitmapScalingMode="HighQuality" />
+                                    </Border>
 
                                     <StackPanel Grid.Column="2" VerticalAlignment="Center">
                                         <TextBlock Text="{Binding SelectedGame.Name}"
@@ -2298,21 +2229,20 @@
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
 
-                                    <Grid Width="147" Height="83" ClipToBounds="True">
-                                        <Border CornerRadius="7"
-                                                Background="#0B1020"
-                                                BorderBrush="#4A3A22"
-                                                BorderThickness="1"
-                                                ClipToBounds="True">
-                                            <Image Source="{Binding SelectedGame.CoverImage}"
-                                                   Width="147"
-                                                   Height="83"
-                                                   Stretch="UniformToFill"
-                                                   SnapsToDevicePixels="True"
-                                                   VerticalAlignment="Top"
-                                                   RenderOptions.BitmapScalingMode="HighQuality" />
-                                        </Border>
-                                    </Grid>
+                                    <Border Width="147"
+                                            Height="83"
+                                            CornerRadius="7"
+                                            Background="#0B1020"
+                                            BorderBrush="#4A3A22"
+                                            BorderThickness="1"
+                                            helpers:CornerRadiusClip.Enabled="True"
+                                            SnapsToDevicePixels="True">
+                                        <Image Source="{Binding SelectedGame.CoverImage}"
+                                               Stretch="UniformToFill"
+                                               SnapsToDevicePixels="True"
+                                               VerticalAlignment="Top"
+                                               RenderOptions.BitmapScalingMode="HighQuality" />
+                                    </Border>
 
                                     <StackPanel Grid.Column="2" VerticalAlignment="Center">
                                         <TextBlock Text="{Binding SelectedGame.Name}"
@@ -2480,6 +2410,95 @@
                                                        Text="{Binding SelectedGame.ArchivedAtDisplay}"
                                                        Style="{StaticResource ArchiveDetailGoldValueStyle}" />
                                         </Grid>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Style="{StaticResource ArchiveDetailSectionStyle}">
+                                    <StackPanel>
+                                        <TextBlock Text="记忆场景" Style="{StaticResource DetailSectionTitleStyle}" />
+
+                                        <Border Height="148"
+                                                CornerRadius="6"
+                                                Background="#0E1522"
+                                                BorderBrush="#243044"
+                                                BorderThickness="1"
+                                                Cursor="Hand"
+                                                ToolTip="点击查看大图"
+                                                helpers:CornerRadiusClip.Enabled="True">
+                                            <Border.InputBindings>
+                                                <MouseBinding MouseAction="LeftClick"
+                                                              Command="{Binding SelectedGame.OpenMemorySceneViewerCommand}" />
+                                            </Border.InputBindings>
+                                            <Grid>
+                                                <TextBlock Text="图片"
+                                                           Foreground="#6B778C"
+                                                           FontSize="13"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding SelectedGame.HasMemoryScenes}" Value="False">
+                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+
+                                                <Image Source="{Binding SelectedGame.CurrentMemorySceneImage}"
+                                                       Stretch="UniformToFill"
+                                                       Margin="0">
+                                                    <Image.Style>
+                                                        <Style TargetType="Image">
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding SelectedGame.HasMemoryScenes}" Value="False">
+                                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Image.Style>
+                                                </Image>
+
+                                                <Button Style="{StaticResource MemorySceneNavButtonStyle}"
+                                                        Command="{Binding SelectedGame.PrevMemorySceneCommand}"
+                                                        HorizontalAlignment="Left"
+                                                        VerticalAlignment="Center"
+                                                        Margin="6,0,0,0"
+                                                        ToolTip="上一张"
+                                                        Visibility="{Binding SelectedGame.CanNavigateMemoryScenes, Converter={StaticResource BoolToVisibility}}">
+                                                    <materialDesign:PackIcon Kind="ChevronLeft"
+                                                                             Width="16" Height="16"
+                                                                             Foreground="#EAF0FF" />
+                                                </Button>
+
+                                                <Button Style="{StaticResource MemorySceneNavButtonStyle}"
+                                                        Command="{Binding SelectedGame.NextMemorySceneCommand}"
+                                                        HorizontalAlignment="Right"
+                                                        VerticalAlignment="Center"
+                                                        Margin="0,0,6,0"
+                                                        ToolTip="下一张"
+                                                        Visibility="{Binding SelectedGame.CanNavigateMemoryScenes, Converter={StaticResource BoolToVisibility}}">
+                                                    <materialDesign:PackIcon Kind="ChevronRight"
+                                                                             Width="16" Height="16"
+                                                                             Foreground="#EAF0FF" />
+                                                </Button>
+
+                                                <Border HorizontalAlignment="Center"
+                                                        VerticalAlignment="Bottom"
+                                                        Margin="0,0,0,8"
+                                                        Padding="8,2"
+                                                        CornerRadius="10"
+                                                        Background="#99101826">
+                                                    <TextBlock Text="{Binding SelectedGame.MemorySceneCounterDisplay}"
+                                                               Foreground="#D7DEEA"
+                                                               FontSize="11"
+                                                               HorizontalAlignment="Center" />
+                                                </Border>
+                                            </Grid>
+                                        </Border>
                                     </StackPanel>
                                 </Border>
 

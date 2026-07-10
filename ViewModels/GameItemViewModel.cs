@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.IO;
 using System.Windows.Input;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -25,6 +27,8 @@ namespace Game_Manager.ViewModels
         private long _currentSessionSeconds;
         private long _totalPlaySeconds;
         private DateTime? _sessionStartUtc;
+        private readonly ObservableCollection<MemorySceneRecord> _memoryScenes = new();
+        private int _currentMemorySceneIndex;
 
         public int Id => _model.Id;
         public string Name
@@ -186,6 +190,7 @@ namespace Game_Manager.ViewModels
                 OnPropertyChanged(nameof(IsStar4Filled));
                 OnPropertyChanged(nameof(IsStar5Filled));
                 OnPropertyChanged(nameof(MedalTierText));
+                OnPropertyChanged(nameof(MedalImagePath));
                 OnPropertyChanged(nameof(IsGoldMedal));
                 OnPropertyChanged(nameof(IsSilverMedal));
                 OnPropertyChanged(nameof(IsBronzeMedal));
@@ -200,6 +205,7 @@ namespace Game_Manager.ViewModels
 
         /// <summary>5 星金、4 星银、3 星及以下铜。</summary>
         public string MedalTierText => UserRating >= 5 ? "金" : UserRating == 4 ? "银" : "铜";
+        public string MedalImagePath => UserRating >= 5 ? "/img/golden.png" : UserRating == 4 ? "/img/silver.png" : "/img/copper.png";
         public bool IsGoldMedal => UserRating >= 5;
         public bool IsSilverMedal => UserRating == 4;
         public bool IsBronzeMedal => UserRating <= 3;
@@ -208,6 +214,46 @@ namespace Game_Manager.ViewModels
 
         public ICommand PlayCommand { get; }
         public ICommand SetRatingCommand { get; }
+        public ICommand PrevMemorySceneCommand { get; }
+        public ICommand NextMemorySceneCommand { get; }
+        public ICommand OpenMemorySceneViewerCommand { get; }
+        public ICommand AddMemorySceneCommand { get; }
+        public ICommand DeleteCurrentMemorySceneCommand { get; }
+
+        public IReadOnlyList<MemorySceneRecord> MemoryScenes => _memoryScenes;
+
+        public int CurrentMemorySceneIndex
+        {
+            get => _currentMemorySceneIndex;
+            private set
+            {
+                if (_currentMemorySceneIndex == value) return;
+                _currentMemorySceneIndex = value;
+                OnPropertyChanged(nameof(CurrentMemorySceneIndex));
+                NotifyMemoryScenePresentationChanged();
+            }
+        }
+
+        public bool HasMemoryScenes => _memoryScenes.Count > 0;
+
+        public ImageSource? CurrentMemorySceneImage
+        {
+            get
+            {
+                if (_memoryScenes.Count == 0 || CurrentMemorySceneIndex < 0 || CurrentMemorySceneIndex >= _memoryScenes.Count)
+                {
+                    return null;
+                }
+
+                return LoadImageSource(_memoryScenes[CurrentMemorySceneIndex].ImagePath);
+            }
+        }
+
+        public string MemorySceneCounterDisplay => _memoryScenes.Count == 0
+            ? "0/0"
+            : $"{CurrentMemorySceneIndex + 1}/{_memoryScenes.Count}";
+
+        public bool CanNavigateMemoryScenes => _memoryScenes.Count > 1;
 
         private bool _isDropTarget;
         public bool IsDropTarget
@@ -260,6 +306,11 @@ namespace Game_Manager.ViewModels
             ArchiveCommand = new RelayCommand(ExecuteArchive, () => !IsArchived);
             RestoreArchiveCommand = new RelayCommand(ExecuteRestoreArchive, () => IsArchived);
             SetRatingCommand = new RelayCommand<object?>(ExecuteSetRating);
+            PrevMemorySceneCommand = new RelayCommand(ExecutePrevMemoryScene, () => CanNavigateMemoryScenes);
+            NextMemorySceneCommand = new RelayCommand(ExecuteNextMemoryScene, () => CanNavigateMemoryScenes);
+            OpenMemorySceneViewerCommand = new RelayCommand(ExecuteOpenMemorySceneViewer);
+            AddMemorySceneCommand = new RelayCommand(ExecuteAddMemoryScene);
+            DeleteCurrentMemorySceneCommand = new RelayCommand(ExecuteDeleteCurrentMemoryScene, () => HasMemoryScenes);
 
             _uiTimer = new DispatcherTimer(DispatcherPriority.Normal)
             {
@@ -285,6 +336,7 @@ namespace Game_Manager.ViewModels
             }
 
             LoadCover();
+            LoadMemoryScenes();
         }
 
         public ICommand ChangeCoverCommand { get; }
@@ -722,6 +774,214 @@ namespace Game_Manager.ViewModels
             {
                 System.Diagnostics.Debug.WriteLine($"SetRating failed: {ex}");
                 System.Windows.MessageBox.Show($"评分保存失败：{ex.Message}", "错误", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+        }
+
+        private void LoadMemoryScenes()
+        {
+            try
+            {
+                _memoryScenes.Clear();
+                foreach (var scene in _db.GetMemoryScenes(Id))
+                {
+                    _memoryScenes.Add(scene);
+                }
+
+                if (_memoryScenes.Count == 0)
+                {
+                    _currentMemorySceneIndex = 0;
+                }
+                else if (_currentMemorySceneIndex >= _memoryScenes.Count)
+                {
+                    _currentMemorySceneIndex = _memoryScenes.Count - 1;
+                }
+
+                NotifyMemoryScenePresentationChanged();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"LoadMemoryScenes failed: {ex}");
+            }
+        }
+
+        private void ExecutePrevMemoryScene()
+        {
+            if (_memoryScenes.Count <= 1) return;
+            CurrentMemorySceneIndex = (CurrentMemorySceneIndex - 1 + _memoryScenes.Count) % _memoryScenes.Count;
+        }
+
+        private void ExecuteNextMemoryScene()
+        {
+            if (_memoryScenes.Count <= 1) return;
+            CurrentMemorySceneIndex = (CurrentMemorySceneIndex + 1) % _memoryScenes.Count;
+        }
+
+        private void ExecuteOpenMemorySceneViewer()
+        {
+            try
+            {
+                var owner = System.Windows.Application.Current?.MainWindow;
+                var viewer = new Views.MemorySceneViewerWindow(this)
+                {
+                    Owner = owner
+                };
+                viewer.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"OpenMemorySceneViewer failed: {ex}");
+                System.Windows.MessageBox.Show($"打开大图模式失败：{ex.Message}", "错误", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+        }
+
+        private void ExecuteAddMemoryScene()
+        {
+            var dlg = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "Image Files|*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.webp|All Files|*.*",
+                Title = "添加记忆场景图片",
+                Multiselect = true
+            };
+
+            if (dlg.ShowDialog() != true) return;
+
+            try
+            {
+                var scenesDirectory = Path.Combine(DatabaseManager.DatabaseDirectoryPath, "MemoryScenes", Id.ToString());
+                Directory.CreateDirectory(scenesDirectory);
+
+                var added = false;
+                foreach (var picked in dlg.FileNames)
+                {
+                    if (string.IsNullOrWhiteSpace(picked) || !File.Exists(picked))
+                    {
+                        continue;
+                    }
+
+                    var extension = Path.GetExtension(picked);
+                    if (string.IsNullOrWhiteSpace(extension))
+                    {
+                        extension = ".png";
+                    }
+
+                    var destination = Path.Combine(scenesDirectory, $"{Guid.NewGuid():N}{extension}");
+                    File.Copy(picked, destination, overwrite: true);
+
+                    var scene = new MemorySceneRecord
+                    {
+                        GameId = Id,
+                        ImagePath = destination,
+                        SortOrder = _memoryScenes.Count,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    scene.Id = _db.InsertMemoryScene(scene);
+                    _memoryScenes.Add(scene);
+                    added = true;
+                }
+
+                if (!added)
+                {
+                    return;
+                }
+
+                CurrentMemorySceneIndex = _memoryScenes.Count - 1;
+                NotifyMemoryScenePresentationChanged();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"AddMemoryScene failed: {ex}");
+                System.Windows.MessageBox.Show($"添加图片失败：{ex.Message}", "错误", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+        }
+
+        private void ExecuteDeleteCurrentMemoryScene()
+        {
+            if (_memoryScenes.Count == 0 || CurrentMemorySceneIndex < 0 || CurrentMemorySceneIndex >= _memoryScenes.Count)
+            {
+                return;
+            }
+
+            var scene = _memoryScenes[CurrentMemorySceneIndex];
+            var result = System.Windows.MessageBox.Show(
+                "确认删除当前记忆场景图片？",
+                "删除确认",
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Question);
+            if (result != System.Windows.MessageBoxResult.Yes)
+            {
+                return;
+            }
+
+            try
+            {
+                if (!_db.DeleteMemoryScene(scene.Id))
+                {
+                    return;
+                }
+
+                try
+                {
+                    if (File.Exists(scene.ImagePath))
+                    {
+                        File.Delete(scene.ImagePath);
+                    }
+                }
+                catch
+                {
+                }
+
+                _memoryScenes.RemoveAt(CurrentMemorySceneIndex);
+                if (_memoryScenes.Count == 0)
+                {
+                    _currentMemorySceneIndex = 0;
+                }
+                else if (_currentMemorySceneIndex >= _memoryScenes.Count)
+                {
+                    _currentMemorySceneIndex = _memoryScenes.Count - 1;
+                }
+
+                NotifyMemoryScenePresentationChanged();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"DeleteMemoryScene failed: {ex}");
+                System.Windows.MessageBox.Show($"删除图片失败：{ex.Message}", "错误", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+        }
+
+        private void NotifyMemoryScenePresentationChanged()
+        {
+            OnPropertyChanged(nameof(CurrentMemorySceneIndex));
+            OnPropertyChanged(nameof(CurrentMemorySceneImage));
+            OnPropertyChanged(nameof(MemorySceneCounterDisplay));
+            OnPropertyChanged(nameof(HasMemoryScenes));
+            OnPropertyChanged(nameof(CanNavigateMemoryScenes));
+            OnPropertyChanged(nameof(MemoryScenes));
+            (PrevMemorySceneCommand as RelayCommand)?.NotifyCanExecuteChanged();
+            (NextMemorySceneCommand as RelayCommand)?.NotifyCanExecuteChanged();
+            (DeleteCurrentMemorySceneCommand as RelayCommand)?.NotifyCanExecuteChanged();
+        }
+
+        private static ImageSource? LoadImageSource(string? path)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+                {
+                    return null;
+                }
+
+                var img = new BitmapImage();
+                img.BeginInit();
+                img.CacheOption = BitmapCacheOption.OnLoad;
+                img.UriSource = new Uri(path);
+                img.EndInit();
+                img.Freeze();
+                return img;
+            }
+            catch
+            {
+                return null;
             }
         }
 

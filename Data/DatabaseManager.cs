@@ -26,6 +26,15 @@ namespace Game_Manager.Data
         public int UserRating { get; set; }
     }
 
+    public class MemorySceneRecord
+    {
+        public int Id { get; set; }
+        public int GameId { get; set; }
+        public string ImagePath { get; set; } = string.Empty;
+        public int SortOrder { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    }
+
     public static class DatabaseManager
     {
         private static readonly object DbLock = new();
@@ -40,6 +49,11 @@ namespace Game_Manager.Data
             JournalMode = SQLiteJournalModeEnum.Wal,
             SyncMode = SynchronizationModes.Normal
         }.ToString();
+
+        public static string DatabaseFilePath => DbFilePath;
+
+        public static string DatabaseDirectoryPath =>
+            Path.GetDirectoryName(DbFilePath) ?? string.Empty;
 
         public static void InitializeDatabase()
         {
@@ -118,6 +132,20 @@ CREATE TABLE IF NOT EXISTS Games (
             }
             catch
             {
+            }
+
+            using (var memoryScenesCommand = connection.CreateCommand())
+            {
+                memoryScenesCommand.CommandText = @"
+CREATE TABLE IF NOT EXISTS MemoryScenes (
+    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+    GameId INTEGER NOT NULL,
+    ImagePath TEXT NOT NULL,
+    SortOrder INTEGER NOT NULL DEFAULT 0,
+    CreatedAt TEXT NOT NULL,
+    FOREIGN KEY (GameId) REFERENCES Games(Id) ON DELETE CASCADE
+);";
+                memoryScenesCommand.ExecuteNonQuery();
             }
         }
 
@@ -253,12 +281,90 @@ WHERE Id = @Id;";
                 using var connection = new SQLiteConnection(ConnectionString);
                 connection.Open();
 
+                using (var scenesCommand = connection.CreateCommand())
+                {
+                    scenesCommand.CommandText = @"DELETE FROM MemoryScenes WHERE GameId = @GameId;";
+                    scenesCommand.Parameters.AddWithValue("@GameId", id);
+                    scenesCommand.ExecuteNonQuery();
+                }
+
                 using var command = connection.CreateCommand();
                 command.CommandText = @"DELETE FROM Games WHERE Id = @Id;";
                 command.Parameters.AddWithValue("@Id", id);
 
                 return command.ExecuteNonQuery() > 0;
             }
+        }
+
+        public static List<MemorySceneRecord> GetMemoryScenes(int gameId)
+        {
+            var scenes = new List<MemorySceneRecord>();
+            using var connection = new SQLiteConnection(ConnectionString);
+            connection.Open();
+
+            using var command = connection.CreateCommand();
+            command.CommandText = @"
+SELECT Id, GameId, ImagePath, SortOrder, CreatedAt
+FROM MemoryScenes
+WHERE GameId = @GameId
+ORDER BY SortOrder, Id;";
+            command.Parameters.AddWithValue("@GameId", gameId);
+
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                scenes.Add(ReadMemoryScene(reader));
+            }
+
+            return scenes;
+        }
+
+        public static int InsertMemoryScene(MemorySceneRecord scene)
+        {
+            lock (DbLock)
+            {
+                using var connection = new SQLiteConnection(ConnectionString);
+                connection.Open();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = @"
+INSERT INTO MemoryScenes (GameId, ImagePath, SortOrder, CreatedAt)
+VALUES (@GameId, @ImagePath, @SortOrder, @CreatedAt);";
+                command.Parameters.AddWithValue("@GameId", scene.GameId);
+                command.Parameters.AddWithValue("@ImagePath", scene.ImagePath);
+                command.Parameters.AddWithValue("@SortOrder", scene.SortOrder);
+                command.Parameters.AddWithValue("@CreatedAt", scene.CreatedAt.ToString("o", CultureInfo.InvariantCulture));
+
+                command.ExecuteNonQuery();
+                return (int)connection.LastInsertRowId;
+            }
+        }
+
+        public static bool DeleteMemoryScene(int id)
+        {
+            lock (DbLock)
+            {
+                using var connection = new SQLiteConnection(ConnectionString);
+                connection.Open();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = @"DELETE FROM MemoryScenes WHERE Id = @Id;";
+                command.Parameters.AddWithValue("@Id", id);
+
+                return command.ExecuteNonQuery() > 0;
+            }
+        }
+
+        private static MemorySceneRecord ReadMemoryScene(SQLiteDataReader reader)
+        {
+            return new MemorySceneRecord
+            {
+                Id = reader.GetInt32(0),
+                GameId = reader.GetInt32(1),
+                ImagePath = reader.GetString(2),
+                SortOrder = reader.GetInt32(3),
+                CreatedAt = DateTime.Parse(reader.GetString(4), null, DateTimeStyles.RoundtripKind)
+            };
         }
 
         private static GameRecord ReadGame(SQLiteDataReader reader)

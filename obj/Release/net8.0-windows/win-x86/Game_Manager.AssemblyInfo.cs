@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Game_Manager")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c2bfa76970c1f9f36981c58b5dc2feae0a642c2d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0af67c1ef00329e0c05292afacdf54bbe1f153f9")]
 [assembly: System.Reflection.AssemblyProductAttribute("Game_Manager")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Game_Manager")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

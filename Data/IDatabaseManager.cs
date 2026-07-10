@@ -11,5 +11,8 @@ namespace Game_Manager.Data
         GameRecord? GetGameById(int id);
         bool UpdateGame(GameRecord game);
         bool DeleteGame(int id);
+        List<MemorySceneRecord> GetMemoryScenes(int gameId);
+        int InsertMemoryScene(MemorySceneRecord scene);
+        bool DeleteMemoryScene(int id);
     }
 }
