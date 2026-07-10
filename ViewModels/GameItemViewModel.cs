@@ -847,9 +847,6 @@ namespace Game_Manager.ViewModels
 
             try
             {
-                var scenesDirectory = Path.Combine(DatabaseManager.DatabaseDirectoryPath, "MemoryScenes", Id.ToString());
-                Directory.CreateDirectory(scenesDirectory);
-
                 var added = false;
                 foreach (var picked in dlg.FileNames)
                 {
@@ -858,19 +855,10 @@ namespace Game_Manager.ViewModels
                         continue;
                     }
 
-                    var extension = Path.GetExtension(picked);
-                    if (string.IsNullOrWhiteSpace(extension))
-                    {
-                        extension = ".png";
-                    }
-
-                    var destination = Path.Combine(scenesDirectory, $"{Guid.NewGuid():N}{extension}");
-                    File.Copy(picked, destination, overwrite: true);
-
                     var scene = new MemorySceneRecord
                     {
                         GameId = Id,
-                        ImagePath = destination,
+                        ImagePath = picked,
                         SortOrder = _memoryScenes.Count,
                         CreatedAt = DateTime.UtcNow
                     };
@@ -917,17 +905,6 @@ namespace Game_Manager.ViewModels
                 if (!_db.DeleteMemoryScene(scene.Id))
                 {
                     return;
-                }
-
-                try
-                {
-                    if (File.Exists(scene.ImagePath))
-                    {
-                        File.Delete(scene.ImagePath);
-                    }
-                }
-                catch
-                {
                 }
 
                 _memoryScenes.RemoveAt(CurrentMemorySceneIndex);

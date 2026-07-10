@@ -73,3 +73,5 @@ C:\Users\STarry\Desktop\game_mananger\Game_Manager\obj\Release\net8.0-windows\Vi
 C:\Users\STarry\Desktop\game_mananger\Game_Manager\obj\Release\net8.0-windows\Views\RenameCategoryWindow.g.cs
 C:\Users\STarry\Desktop\game_mananger\Game_Manager\obj\Release\net8.0-windows\Views\SettingsWindow.baml
 C:\Users\STarry\Desktop\game_mananger\Game_Manager\obj\Release\net8.0-windows\Views\SettingsWindow.g.cs
+C:\Users\STarry\Desktop\game_mananger\Game_Manager\obj\Release\net8.0-windows\Views\MemorySceneViewerWindow.baml
+C:\Users\STarry\Desktop\game_mananger\Game_Manager\obj\Release\net8.0-windows\Views\MemorySceneViewerWindow.g.cs

@@ -10,11 +10,11 @@ none
 false
 TRACE;RELEASE;NET;NET8_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
 C:\Users\STarry\Desktop\game_mananger\Game_Manager\App.xaml
-62111194316
+7-1407693146
 22-1126602754
-22-345360922
+241838785045
 207451980528
-MainWindow.xaml;Views\AddCategoryWindow.xaml;Views\ChangeCategoryWindow.xaml;Views\RenameCategoryWindow.xaml;Views\RenameWindow.xaml;Views\SettingsWindow.xaml;
+MainWindow.xaml;Views\AddCategoryWindow.xaml;Views\ChangeCategoryWindow.xaml;Views\MemorySceneViewerWindow.xaml;Views\RenameCategoryWindow.xaml;Views\RenameWindow.xaml;Views\SettingsWindow.xaml;
 
 False
 
