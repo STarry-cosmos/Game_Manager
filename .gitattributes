@@ -1,0 +1,5 @@
+# 批处理脚本必须以 CRLF 检出
+# LF 换行会导致 cmd 的标签跳转（goto / call :label）失效，
+# 因此这里显式指定 eol=crlf，不受 core.autocrlf 设置影响。
+*.cmd text eol=crlf
+*.bat text eol=crlf
