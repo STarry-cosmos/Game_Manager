@@ -61,6 +61,7 @@ namespace Game_Manager.Data
             if (!string.IsNullOrEmpty(directory))
             {
                 Directory.CreateDirectory(directory);
+                Directory.CreateDirectory(Path.Combine(directory, "Media"));
             }
 
             using var connection = new SQLiteConnection(ConnectionString);
@@ -337,6 +338,22 @@ VALUES (@GameId, @ImagePath, @SortOrder, @CreatedAt);";
 
                 command.ExecuteNonQuery();
                 return (int)connection.LastInsertRowId;
+            }
+        }
+
+        public static bool UpdateMemoryScenePath(int id, string imagePath)
+        {
+            lock (DbLock)
+            {
+                using var connection = new SQLiteConnection(ConnectionString);
+                connection.Open();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = @"UPDATE MemoryScenes SET ImagePath = @ImagePath WHERE Id = @Id;";
+                command.Parameters.AddWithValue("@ImagePath", imagePath);
+                command.Parameters.AddWithValue("@Id", id);
+
+                return command.ExecuteNonQuery() > 0;
             }
         }
 

@@ -52,3 +52,7 @@ Desktop.ini
 settings.json
 **/GameLauncher.db
 SPEC.md
+ToDo_List.md
+
+## AI assistant workspace (local notes / session state)
+.workbuddy-ai/

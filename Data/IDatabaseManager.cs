@@ -13,6 +13,7 @@ namespace Game_Manager.Data
         bool DeleteGame(int id);
         List<MemorySceneRecord> GetMemoryScenes(int gameId);
         int InsertMemoryScene(MemorySceneRecord scene);
+        bool UpdateMemoryScenePath(int id, string imagePath);
         bool DeleteMemoryScene(int id);
     }
 }

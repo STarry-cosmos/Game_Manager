@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.Input;
 using Game_Manager.Models;
 using Game_Manager.Services;
 using Game_Manager.Data;
+using Game_Manager.Helpers;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Drawing;
@@ -49,8 +50,21 @@ namespace Game_Manager.ViewModels
                 if (_model.ExecutablePath == value) return;
                 _model.ExecutablePath = value;
                 OnPropertyChanged(nameof(ExecutablePath));
+                OnPropertyChanged(nameof(IsExecutableAvailable));
+                OnPropertyChanged(nameof(PlayButtonToolTip));
+                (PlayCommand as RelayCommand)?.NotifyCanExecuteChanged();
             }
         }
+
+        public bool IsExecutableAvailable =>
+            !string.IsNullOrWhiteSpace(ExecutablePath) && File.Exists(ExecutablePath);
+
+        public string PlayButtonToolTip =>
+            IsRunning
+                ? "游戏运行中"
+                : IsExecutableAvailable
+                    ? "启动游戏"
+                    : "可执行文件不存在";
 
         public bool IsRunning
         {
@@ -61,6 +75,7 @@ namespace Game_Manager.ViewModels
                 _model.IsRunning = value;
                 OnPropertyChanged(nameof(IsRunning));
                 OnPropertyChanged(nameof(ButtonText));
+                OnPropertyChanged(nameof(PlayButtonToolTip));
             }
         }
 
@@ -345,12 +360,15 @@ namespace Game_Manager.ViewModels
         {
             try
             {
-                if (!string.IsNullOrWhiteSpace(_model.CoverImagePath) && System.IO.File.Exists(_model.CoverImagePath))
+                TryMigrateCoverToMedia();
+
+                var coverPath = MediaStorage.ResolvePath(_model.CoverImagePath);
+                if (!string.IsNullOrWhiteSpace(coverPath))
                 {
                     var img = new BitmapImage();
                     img.BeginInit();
                     img.CacheOption = BitmapCacheOption.OnLoad;
-                    img.UriSource = new Uri(_model.CoverImagePath);
+                    img.UriSource = new Uri(coverPath);
                     img.EndInit();
                     img.Freeze();
                     CoverImage = img;
@@ -377,6 +395,34 @@ namespace Game_Manager.ViewModels
                 }
             }
             catch { }
+        }
+
+        private void TryMigrateCoverToMedia()
+        {
+            try
+            {
+                var migrated = MediaStorage.TryMigrateExternalFile(_model.CoverImagePath, "covers", Id);
+                if (migrated == null || migrated == _model.CoverImagePath)
+                {
+                    return;
+                }
+
+                var rec = _db.GetGameById(Id);
+                if (rec == null)
+                {
+                    return;
+                }
+
+                rec.CoverImagePath = migrated;
+                if (_db.UpdateGame(rec))
+                {
+                    _model.CoverImagePath = migrated;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Migrate cover failed: {ex}");
+            }
         }
 
         private ImageSource? _coverImage;
@@ -481,19 +527,30 @@ namespace Game_Manager.ViewModels
 
             try
             {
-                // save path to DB
                 var rec = _db.GetGameById(Id);
-                if (rec != null)
+                if (rec == null)
                 {
-                    rec.CoverImagePath = picked;
-                    _db.UpdateGame(rec);
-                    _model.CoverImagePath = picked;
+                    return;
+                }
+
+                var previousCover = rec.CoverImagePath;
+                var storedPath = MediaStorage.ImportImage(picked, "covers", Id);
+                rec.CoverImagePath = storedPath;
+                if (_db.UpdateGame(rec))
+                {
+                    _model.CoverImagePath = storedPath;
+                    if (!string.Equals(previousCover, storedPath, StringComparison.OrdinalIgnoreCase))
+                    {
+                        MediaStorage.TryDeleteManagedFile(previousCover);
+                    }
+
                     LoadCover();
                 }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"ChangeCover failed: {ex}");
+                System.Windows.MessageBox.Show($"更改封面失败：{ex.Message}", "错误", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
         }
 
@@ -507,9 +564,18 @@ namespace Game_Manager.ViewModels
                 // stop monitoring if any
                 try { _monitor.StopMonitoring(Id); } catch { }
 
+                var coverPath = _model.CoverImagePath;
+                var scenePaths = _db.GetMemoryScenes(Id).ConvertAll(scene => scene.ImagePath);
+
                 var ok = _db.DeleteGame(Id);
                 if (ok)
                 {
+                    MediaStorage.TryDeleteManagedFile(coverPath);
+                    foreach (var scenePath in scenePaths)
+                    {
+                        MediaStorage.TryDeleteManagedFile(scenePath);
+                    }
+
                     Deleted?.Invoke(this);
                     Dispose();
                 }
@@ -553,8 +619,8 @@ namespace Game_Manager.ViewModels
 
         private bool CanExecutePlayCommand()
         {
-            // prevent duplicate starts
-            return !IsRunning && !string.IsNullOrWhiteSpace(ExecutablePath);
+            // prevent duplicate starts and launching when the exe is missing
+            return !IsRunning && IsExecutableAvailable;
         }
 
         private void ExecutePlayCommand()
@@ -784,6 +850,7 @@ namespace Game_Manager.ViewModels
                 _memoryScenes.Clear();
                 foreach (var scene in _db.GetMemoryScenes(Id))
                 {
+                    TryMigrateMemorySceneToMedia(scene);
                     _memoryScenes.Add(scene);
                 }
 
@@ -801,6 +868,27 @@ namespace Game_Manager.ViewModels
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"LoadMemoryScenes failed: {ex}");
+            }
+        }
+
+        private void TryMigrateMemorySceneToMedia(MemorySceneRecord scene)
+        {
+            try
+            {
+                var migrated = MediaStorage.TryMigrateExternalFile(scene.ImagePath, "scenes", Id);
+                if (migrated == null || migrated == scene.ImagePath)
+                {
+                    return;
+                }
+
+                if (_db.UpdateMemoryScenePath(scene.Id, migrated))
+                {
+                    scene.ImagePath = migrated;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Migrate memory scene failed: {ex}");
             }
         }
 
@@ -855,10 +943,11 @@ namespace Game_Manager.ViewModels
                         continue;
                     }
 
+                    var storedPath = MediaStorage.ImportImage(picked, "scenes", Id);
                     var scene = new MemorySceneRecord
                     {
                         GameId = Id,
-                        ImagePath = picked,
+                        ImagePath = storedPath,
                         SortOrder = _memoryScenes.Count,
                         CreatedAt = DateTime.UtcNow
                     };
@@ -891,7 +980,7 @@ namespace Game_Manager.ViewModels
 
             var scene = _memoryScenes[CurrentMemorySceneIndex];
             var result = System.Windows.MessageBox.Show(
-                "确认删除当前记忆场景图片？",
+                "确认删除当前记忆场景图片？\n（将同时删除应用数据目录中保存的副本）",
                 "删除确认",
                 System.Windows.MessageBoxButton.YesNo,
                 System.Windows.MessageBoxImage.Question);
@@ -906,6 +995,8 @@ namespace Game_Manager.ViewModels
                 {
                     return;
                 }
+
+                MediaStorage.TryDeleteManagedFile(scene.ImagePath);
 
                 _memoryScenes.RemoveAt(CurrentMemorySceneIndex);
                 if (_memoryScenes.Count == 0)
@@ -943,7 +1034,8 @@ namespace Game_Manager.ViewModels
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+                var resolved = MediaStorage.ResolvePath(path);
+                if (string.IsNullOrWhiteSpace(resolved))
                 {
                     return null;
                 }
@@ -951,7 +1043,7 @@ namespace Game_Manager.ViewModels
                 var img = new BitmapImage();
                 img.BeginInit();
                 img.CacheOption = BitmapCacheOption.OnLoad;
-                img.UriSource = new Uri(path);
+                img.UriSource = new Uri(resolved);
                 img.EndInit();
                 img.Freeze();
                 return img;

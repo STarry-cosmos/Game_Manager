@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows;
 using Game_Manager.Data;
+using Game_Manager.Views;
 
 namespace Game_Manager
 {
@@ -11,16 +12,33 @@ namespace Game_Manager
     {
         protected override void OnStartup(StartupEventArgs e)
         {
-            try
+            base.OnStartup(e);
+
+            while (true)
             {
-                DatabaseManager.InitializeDatabase();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"无法初始化数据库：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                try
+                {
+                    DatabaseManager.InitializeDatabase();
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    var dialog = new DatabaseInitFailedWindow(ex.Message);
+                    dialog.ShowDialog();
+
+                    if (dialog.ResultAction == DatabaseInitFailedAction.Retry)
+                    {
+                        continue;
+                    }
+
+                    Shutdown();
+                    return;
+                }
             }
 
-            base.OnStartup(e);
+            var mainWindow = new MainWindow();
+            MainWindow = mainWindow;
+            mainWindow.Show();
         }
     }
 }

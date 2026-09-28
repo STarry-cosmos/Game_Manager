@@ -23,6 +23,8 @@ namespace Game_Manager.Data
 
         public int InsertMemoryScene(MemorySceneRecord scene) => DatabaseManager.InsertMemoryScene(scene);
 
+        public bool UpdateMemoryScenePath(int id, string imagePath) => DatabaseManager.UpdateMemoryScenePath(id, imagePath);
+
         public bool DeleteMemoryScene(int id) => DatabaseManager.DeleteMemoryScene(id);
     }
 }
