@@ -79,6 +79,7 @@ namespace Game_Manager.ViewModels
         public IRelayCommand<GameCategoryViewModel> DeleteCategoryCommand { get; }
         public IRelayCommand<GameCategoryViewModel> SelectCategoryCommand { get; }
         public IRelayCommand<GameItemViewModel> SelectGameCommand { get; }
+        public IRelayCommand ClearSelectionCommand { get; }
         public IRelayCommand ToggleSortDirectionCommand { get; }
         public IRelayCommand ShowGridViewCommand { get; }
         public IRelayCommand ShowListViewCommand { get; }
@@ -271,6 +272,7 @@ namespace Game_Manager.ViewModels
             DeleteCategoryCommand = new RelayCommand<GameCategoryViewModel>(DeleteCategory);
             SelectCategoryCommand = new RelayCommand<GameCategoryViewModel>(SelectCategory);
             SelectGameCommand = new RelayCommand<GameItemViewModel>(SelectGame);
+            ClearSelectionCommand = new RelayCommand(ClearSelection);
             ToggleSortDirectionCommand = new RelayCommand(ToggleSortDirection);
             ShowGridViewCommand = new RelayCommand(() => SetViewMode(true));
             ShowListViewCommand = new RelayCommand(() => SetViewMode(false));
@@ -699,6 +701,12 @@ namespace Game_Manager.ViewModels
         private void SelectGame(GameItemViewModel? game)
         {
             SelectedGame = game;
+        }
+
+        /// <summary>关闭右侧详情栏：取消选中后列表会自动补上这块宽度。</summary>
+        private void ClearSelection()
+        {
+            SelectedGame = null;
         }
 
         private void SelectCategory(GameCategoryViewModel? category)
