@@ -56,6 +56,156 @@ namespace Game_Manager.ViewModels
         }
     }
 
+    /// <summary>
+    /// 设置窗口「卡片尺寸」区的草稿值：只有点「应用」才会写回 MainViewModel 并落盘，
+    /// 所以拖动滑块 / 输入数字都不会立刻影响主界面。
+    /// 高度勾选「自动」时，对应的高度数值不参与生效。
+    /// </summary>
+    public class CardSizeDraftViewModel : ObservableObject
+    {
+        private int _gridCardWidth = CardSizeOptions.GridCardWidthDefault;
+        private int _gridCardHeight;
+        private bool _gridCardHeightAuto = true;
+
+        private int _archiveGridCardWidth = CardSizeOptions.ArchiveGridCardWidthDefault;
+        private int _archiveGridCardHeight;
+        private bool _archiveGridCardHeightAuto = true;
+
+        private int _listRowHeight;
+        private bool _listRowHeightAuto = true;
+
+        private int _archiveListRowHeight;
+        private bool _archiveListRowHeightAuto = true;
+
+        // ---------- 网格卡片 · 普通页面 ----------
+
+        public int GridCardWidth
+        {
+            get => _gridCardWidth;
+            set => SetProperty(ref _gridCardWidth, value);
+        }
+
+        public bool GridCardHeightAuto
+        {
+            get => _gridCardHeightAuto;
+            set
+            {
+                if (!SetProperty(ref _gridCardHeightAuto, value))
+                {
+                    return;
+                }
+
+                if (!value && _gridCardHeight <= 0)
+                {
+                    GridCardHeight = CardSizeOptions.GridCardHeightFallback;
+                }
+
+                OnPropertyChanged(nameof(GridCardHeightEnabled));
+            }
+        }
+
+        public bool GridCardHeightEnabled => !_gridCardHeightAuto;
+
+        public int GridCardHeight
+        {
+            get => _gridCardHeight;
+            set => SetProperty(ref _gridCardHeight, value);
+        }
+
+        // ---------- 网格卡片 · 归档页面 ----------
+
+        public int ArchiveGridCardWidth
+        {
+            get => _archiveGridCardWidth;
+            set => SetProperty(ref _archiveGridCardWidth, value);
+        }
+
+        public bool ArchiveGridCardHeightAuto
+        {
+            get => _archiveGridCardHeightAuto;
+            set
+            {
+                if (!SetProperty(ref _archiveGridCardHeightAuto, value))
+                {
+                    return;
+                }
+
+                if (!value && _archiveGridCardHeight <= 0)
+                {
+                    ArchiveGridCardHeight = CardSizeOptions.ArchiveGridCardHeightFallback;
+                }
+
+                OnPropertyChanged(nameof(ArchiveGridCardHeightEnabled));
+            }
+        }
+
+        public bool ArchiveGridCardHeightEnabled => !_archiveGridCardHeightAuto;
+
+        public int ArchiveGridCardHeight
+        {
+            get => _archiveGridCardHeight;
+            set => SetProperty(ref _archiveGridCardHeight, value);
+        }
+
+        // ---------- 列表行 · 普通页面 ----------
+
+        public bool ListRowHeightAuto
+        {
+            get => _listRowHeightAuto;
+            set
+            {
+                if (!SetProperty(ref _listRowHeightAuto, value))
+                {
+                    return;
+                }
+
+                if (!value && _listRowHeight <= 0)
+                {
+                    ListRowHeight = CardSizeOptions.ListRowHeightFallback;
+                }
+
+                OnPropertyChanged(nameof(ListRowHeightEnabled));
+            }
+        }
+
+        public bool ListRowHeightEnabled => !_listRowHeightAuto;
+
+        public int ListRowHeight
+        {
+            get => _listRowHeight;
+            set => SetProperty(ref _listRowHeight, value);
+        }
+
+        // ---------- 列表行 · 归档页面 ----------
+
+        public bool ArchiveListRowHeightAuto
+        {
+            get => _archiveListRowHeightAuto;
+            set
+            {
+                if (!SetProperty(ref _archiveListRowHeightAuto, value))
+                {
+                    return;
+                }
+
+                if (!value && _archiveListRowHeight <= 0)
+                {
+                    ArchiveListRowHeight = CardSizeOptions.ArchiveListRowHeightFallback;
+                }
+
+                OnPropertyChanged(nameof(ArchiveListRowHeightEnabled));
+            }
+        }
+
+        public bool ArchiveListRowHeightEnabled => !_archiveListRowHeightAuto;
+
+        public int ArchiveListRowHeight
+        {
+            get => _archiveListRowHeight;
+            set => SetProperty(ref _archiveListRowHeight, value);
+        }
+    }
+
     public partial class MainViewModel : ObservableObject
     {
         private readonly List<GameItemViewModel> _allGames = new();
@@ -80,6 +230,7 @@ namespace Game_Manager.ViewModels
         public IRelayCommand<GameCategoryViewModel> SelectCategoryCommand { get; }
         public IRelayCommand<GameItemViewModel> SelectGameCommand { get; }
         public IRelayCommand ClearSelectionCommand { get; }
+        public IRelayCommand ApplyCardSizesCommand { get; }
         public IRelayCommand ToggleSortDirectionCommand { get; }
         public IRelayCommand ShowGridViewCommand { get; }
         public IRelayCommand ShowListViewCommand { get; }
@@ -95,6 +246,114 @@ namespace Game_Manager.ViewModels
         public string AppLicenseDisplay => AppInfo.LicenseName;
 
         public string ProjectUrl => AppInfo.ProjectUrl;
+
+        // ==================== 卡片尺寸 ====================
+        // 宽度直接作为像素值绑定；高度为 0 表示「自动」（不写死高度，由内容撑开）。
+        // 下面 XxxHeightOrAuto / XxxCoverHeight 是给 XAML 绑定用的派生值：
+        //   - 卡片/行高度：0 → double.NaN，即 WPF 的 Auto
+        //   - 封面高度：自动时沿用历史写死值；手动时 → NaN，让封面跟随卡片一起拉伸
+
+        private int _gridCardWidth = CardSizeOptions.GridCardWidthDefault;
+        private int _gridCardHeight;
+        private int _archiveGridCardWidth = CardSizeOptions.ArchiveGridCardWidthDefault;
+        private int _archiveGridCardHeight;
+        private int _listRowHeight;
+        private int _archiveListRowHeight;
+
+        public int GridCardWidth
+        {
+            get => _gridCardWidth;
+            private set => SetProperty(ref _gridCardWidth, value);
+        }
+
+        public int GridCardHeight
+        {
+            get => _gridCardHeight;
+            private set
+            {
+                if (!SetProperty(ref _gridCardHeight, value))
+                {
+                    return;
+                }
+
+                OnPropertyChanged(nameof(GridCardHeightOrAuto));
+                OnPropertyChanged(nameof(GridCardCoverHeight));
+            }
+        }
+
+        public double GridCardHeightOrAuto => CardSizeOptions.ToHeightOrAuto(_gridCardHeight);
+
+        public double GridCardCoverHeight =>
+            CardSizeOptions.CoverHeightOrStretch(_gridCardHeight, CardSizeOptions.GridCardCoverHeightWhenAuto);
+
+        public int ArchiveGridCardWidth
+        {
+            get => _archiveGridCardWidth;
+            private set => SetProperty(ref _archiveGridCardWidth, value);
+        }
+
+        public int ArchiveGridCardHeight
+        {
+            get => _archiveGridCardHeight;
+            private set
+            {
+                if (!SetProperty(ref _archiveGridCardHeight, value))
+                {
+                    return;
+                }
+
+                OnPropertyChanged(nameof(ArchiveGridCardHeightOrAuto));
+                OnPropertyChanged(nameof(ArchiveGridCardCoverHeight));
+            }
+        }
+
+        public double ArchiveGridCardHeightOrAuto => CardSizeOptions.ToHeightOrAuto(_archiveGridCardHeight);
+
+        public double ArchiveGridCardCoverHeight =>
+            CardSizeOptions.CoverHeightOrStretch(_archiveGridCardHeight, CardSizeOptions.GridCardCoverHeightWhenAuto);
+
+        public int ListRowHeight
+        {
+            get => _listRowHeight;
+            private set
+            {
+                if (!SetProperty(ref _listRowHeight, value))
+                {
+                    return;
+                }
+
+                OnPropertyChanged(nameof(ListRowHeightOrAuto));
+                OnPropertyChanged(nameof(ListRowCoverHeight));
+            }
+        }
+
+        public double ListRowHeightOrAuto => CardSizeOptions.ToHeightOrAuto(_listRowHeight);
+
+        public double ListRowCoverHeight =>
+            CardSizeOptions.CoverHeightOrStretch(_listRowHeight, CardSizeOptions.ListRowCoverHeightWhenAuto);
+
+        public int ArchiveListRowHeight
+        {
+            get => _archiveListRowHeight;
+            private set
+            {
+                if (!SetProperty(ref _archiveListRowHeight, value))
+                {
+                    return;
+                }
+
+                OnPropertyChanged(nameof(ArchiveListRowHeightOrAuto));
+                OnPropertyChanged(nameof(ArchiveListRowCoverHeight));
+            }
+        }
+
+        public double ArchiveListRowHeightOrAuto => CardSizeOptions.ToHeightOrAuto(_archiveListRowHeight);
+
+        public double ArchiveListRowCoverHeight =>
+            CardSizeOptions.CoverHeightOrStretch(_archiveListRowHeight, CardSizeOptions.ArchiveListRowCoverHeightWhenAuto);
+
+        /// <summary>设置窗口「卡片尺寸」区的草稿值，点「应用」后才生效。</summary>
+        public CardSizeDraftViewModel CardSizeDraft { get; } = new();
 
         private GameCategoryViewModel? _selectedCategory;
         public GameCategoryViewModel? SelectedCategory
@@ -273,6 +532,7 @@ namespace Game_Manager.ViewModels
             SelectCategoryCommand = new RelayCommand<GameCategoryViewModel>(SelectCategory);
             SelectGameCommand = new RelayCommand<GameItemViewModel>(SelectGame);
             ClearSelectionCommand = new RelayCommand(ClearSelection);
+            ApplyCardSizesCommand = new RelayCommand(ApplyCardSizes);
             ToggleSortDirectionCommand = new RelayCommand(ToggleSortDirection);
             ShowGridViewCommand = new RelayCommand(() => SetViewMode(true));
             ShowListViewCommand = new RelayCommand(() => SetViewMode(false));
@@ -379,8 +639,123 @@ namespace Game_Manager.ViewModels
                 OnPropertyChanged(nameof(IsSortDirectionEnabled));
                 OnPropertyChanged(nameof(IsGridView));
                 OnPropertyChanged(nameof(IsListView));
+                LoadCardSizesFromSettings();
             }
             catch { }
+        }
+
+        /// <summary>
+        /// 从 settings.json 读取卡片尺寸。旧版配置文件没有这些字段（会得到 0），
+        /// 由 CardSizeOptions 回退到默认值 / 自动，避免老用户升级后卡片变成 0 尺寸。
+        /// </summary>
+        private void LoadCardSizesFromSettings()
+        {
+            GridCardWidth = CardSizeOptions.ResolveWidth(
+                _settings.GridCardWidth,
+                CardSizeOptions.GridCardWidthDefault,
+                CardSizeOptions.GridCardWidthMin,
+                CardSizeOptions.GridCardWidthMax);
+
+            GridCardHeight = CardSizeOptions.ResolveHeight(
+                _settings.GridCardHeight,
+                CardSizeOptions.GridCardHeightMin,
+                CardSizeOptions.GridCardHeightMax);
+
+            ArchiveGridCardWidth = CardSizeOptions.ResolveWidth(
+                _settings.ArchiveGridCardWidth,
+                CardSizeOptions.ArchiveGridCardWidthDefault,
+                CardSizeOptions.ArchiveGridCardWidthMin,
+                CardSizeOptions.ArchiveGridCardWidthMax);
+
+            ArchiveGridCardHeight = CardSizeOptions.ResolveHeight(
+                _settings.ArchiveGridCardHeight,
+                CardSizeOptions.ArchiveGridCardHeightMin,
+                CardSizeOptions.ArchiveGridCardHeightMax);
+
+            ListRowHeight = CardSizeOptions.ResolveHeight(
+                _settings.ListRowHeight,
+                CardSizeOptions.ListRowHeightMin,
+                CardSizeOptions.ListRowHeightMax);
+
+            ArchiveListRowHeight = CardSizeOptions.ResolveHeight(
+                _settings.ArchiveListRowHeight,
+                CardSizeOptions.ArchiveListRowHeightMin,
+                CardSizeOptions.ArchiveListRowHeightMax);
+
+            SyncDraftFromApplied();
+        }
+
+        /// <summary>把已生效的尺寸回填到设置窗口的草稿值。</summary>
+        private void SyncDraftFromApplied()
+        {
+            CardSizeDraft.GridCardWidth = _gridCardWidth;
+            CardSizeDraft.GridCardHeightAuto = _gridCardHeight <= 0;
+            CardSizeDraft.GridCardHeight = _gridCardHeight > 0
+                ? _gridCardHeight
+                : CardSizeOptions.GridCardHeightFallback;
+
+            CardSizeDraft.ArchiveGridCardWidth = _archiveGridCardWidth;
+            CardSizeDraft.ArchiveGridCardHeightAuto = _archiveGridCardHeight <= 0;
+            CardSizeDraft.ArchiveGridCardHeight = _archiveGridCardHeight > 0
+                ? _archiveGridCardHeight
+                : CardSizeOptions.ArchiveGridCardHeightFallback;
+
+            CardSizeDraft.ListRowHeightAuto = _listRowHeight <= 0;
+            CardSizeDraft.ListRowHeight = _listRowHeight > 0
+                ? _listRowHeight
+                : CardSizeOptions.ListRowHeightFallback;
+
+            CardSizeDraft.ArchiveListRowHeightAuto = _archiveListRowHeight <= 0;
+            CardSizeDraft.ArchiveListRowHeight = _archiveListRowHeight > 0
+                ? _archiveListRowHeight
+                : CardSizeOptions.ArchiveListRowHeightFallback;
+        }
+
+        /// <summary>点「应用」后：草稿 → 生效值（同时夹到合法范围）→ 落盘。</summary>
+        private void ApplyCardSizes()
+        {
+            GridCardWidth = CardSizeOptions.Clamp(
+                CardSizeDraft.GridCardWidth,
+                CardSizeOptions.GridCardWidthMin,
+                CardSizeOptions.GridCardWidthMax);
+
+            GridCardHeight = CardSizeDraft.GridCardHeightAuto
+                ? 0
+                : CardSizeOptions.Clamp(
+                    CardSizeDraft.GridCardHeight,
+                    CardSizeOptions.GridCardHeightMin,
+                    CardSizeOptions.GridCardHeightMax);
+
+            ArchiveGridCardWidth = CardSizeOptions.Clamp(
+                CardSizeDraft.ArchiveGridCardWidth,
+                CardSizeOptions.ArchiveGridCardWidthMin,
+                CardSizeOptions.ArchiveGridCardWidthMax);
+
+            ArchiveGridCardHeight = CardSizeDraft.ArchiveGridCardHeightAuto
+                ? 0
+                : CardSizeOptions.Clamp(
+                    CardSizeDraft.ArchiveGridCardHeight,
+                    CardSizeOptions.ArchiveGridCardHeightMin,
+                    CardSizeOptions.ArchiveGridCardHeightMax);
+
+            ListRowHeight = CardSizeDraft.ListRowHeightAuto
+                ? 0
+                : CardSizeOptions.Clamp(
+                    CardSizeDraft.ListRowHeight,
+                    CardSizeOptions.ListRowHeightMin,
+                    CardSizeOptions.ListRowHeightMax);
+
+            ArchiveListRowHeight = CardSizeDraft.ArchiveListRowHeightAuto
+                ? 0
+                : CardSizeOptions.Clamp(
+                    CardSizeDraft.ArchiveListRowHeight,
+                    CardSizeOptions.ArchiveListRowHeightMin,
+                    CardSizeOptions.ArchiveListRowHeightMax);
+
+            SaveSortSettings();
+
+            // 把夹取后的真实值回填到界面，让用户看到实际生效的数值
+            SyncDraftFromApplied();
         }
 
         private void SaveSortSettings()
@@ -391,7 +766,13 @@ namespace Game_Manager.ViewModels
                 {
                     SelectedSortIndex = SelectedSortIndex,
                     IsAscending = IsAscending,
-                    IsGridView = IsGridView
+                    IsGridView = IsGridView,
+                    GridCardWidth = _gridCardWidth,
+                    GridCardHeight = _gridCardHeight,
+                    ArchiveGridCardWidth = _archiveGridCardWidth,
+                    ArchiveGridCardHeight = _archiveGridCardHeight,
+                    ListRowHeight = _listRowHeight,
+                    ArchiveListRowHeight = _archiveListRowHeight
                 };
                 AppSettingsManager.SaveSortSettings(_settings);
             }
@@ -523,6 +904,9 @@ namespace Game_Manager.ViewModels
 
         private void OpenSettings()
         {
+            // 每次打开设置都用当前生效值刷新草稿，避免上次未应用的残留值
+            SyncDraftFromApplied();
+
             var dialog = new Views.SettingsWindow
             {
                 Owner = System.Windows.Application.Current?.MainWindow,

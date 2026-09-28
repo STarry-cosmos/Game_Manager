@@ -1292,7 +1292,8 @@
                             <DataTemplate>
                                 <materialDesign:Card UniformCornerRadius="16"
                                                      Margin="10"
-                                                     Width="240"
+                                                     Width="{Binding DataContext.GridCardWidth, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                     Height="{Binding DataContext.GridCardHeightOrAuto, RelativeSource={RelativeSource AncestorType=Window}}"
                                                      materialDesign:ElevationAssist.Elevation="Dp2"
                                                      Background="{StaticResource CardPanelBrush}"
                                                      Cursor="Hand"
@@ -1338,10 +1339,15 @@
                                                 Background="#223D7A"
                                                 Visibility="{Binding IsDropTarget, Converter={StaticResource BoolToVisibility}}"
                                                 IsHitTestVisible="False" />
-                                        <DockPanel LastChildFill="True" MouseLeftButtonUp="OnCardClicked">
-                                        <!-- Cover Image -->
-                                        <Grid Width="220" Height="124" Margin="12,12,12,0"
-                                              DockPanel.Dock="Top" ClipToBounds="True">
+                                        <Grid MouseLeftButtonUp="OnCardClicked">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="*" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+                                        <!-- Cover Image：高度由设置驱动；「自动」时沿用历史写死的 124 -->
+                                        <Grid Grid.Row="0"
+                                              Height="{Binding DataContext.GridCardCoverHeight, RelativeSource={RelativeSource AncestorType=Window}}"
+                                              Margin="12,12,12,0" ClipToBounds="True">
                                             <Border CornerRadius="10" ClipToBounds="True" Background="#0B1020">
                                                 <Image Source="{Binding CoverImage}"
                                                        Stretch="UniformToFill"
@@ -1367,7 +1373,7 @@
                                         </Grid>
 
                                         <!-- Card Content -->
-                                        <StackPanel Margin="14,12,14,14">
+                                        <StackPanel Grid.Row="1" Margin="14,12,14,14">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition />
@@ -1442,7 +1448,7 @@
                                                 </Button.Style>
                                             </Button>
                                         </StackPanel>
-                                        </DockPanel>
+                                        </Grid>
                                     </Grid>
                                 </materialDesign:Card>
                             </DataTemplate>
@@ -1479,12 +1485,20 @@
                                 <DataTemplate>
                                     <Border Style="{StaticResource ArchiveGridCardStyle}"
                                             Tag="ArchiveGridCard"
+                                            Width="{Binding DataContext.ArchiveGridCardWidth, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            Height="{Binding DataContext.ArchiveGridCardHeightOrAuto, RelativeSource={RelativeSource AncestorType=Window}}"
                                             PreviewMouseLeftButtonDown="Card_PreviewMouseLeftButtonDown"
                                             MouseMove="Card_MouseMove"
                                             PreviewMouseLeftButtonUp="Card_PreviewMouseLeftButtonUp"
                                             MouseLeftButtonUp="OnCardClicked">
-                                        <StackPanel>
-                                            <Grid Height="124" ClipToBounds="True">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="*" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+                                            <Grid Grid.Row="0"
+                                                  Height="{Binding DataContext.ArchiveGridCardCoverHeight, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                  ClipToBounds="True">
                                                 <Border CornerRadius="12,12,0,0"
                                                         Background="#0B1020"
                                                         helpers:CornerRadiusClip.Enabled="True"
@@ -1503,7 +1517,7 @@
                                                 </Border>
                                             </Grid>
 
-                                            <StackPanel Margin="12,10,12,12">
+                                            <StackPanel Grid.Row="1" Margin="12,10,12,12">
                                                 <TextBlock Text="{Binding Name}"
                                                            Foreground="#F7F1E4"
                                                            FontSize="14"
@@ -1591,7 +1605,7 @@
                                                     </materialDesign:PackIcon>
                                                 </StackPanel>
                                             </StackPanel>
-                                        </StackPanel>
+                                        </Grid>
                                     </Border>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
@@ -1627,6 +1641,7 @@
                                 <DataTemplate>
                                     <Border Margin="0,0,0,1"
                                             Padding="10,10"
+                                            Height="{Binding DataContext.ListRowHeightOrAuto, RelativeSource={RelativeSource AncestorType=Window}}"
                                             Cursor="Hand"
                                             Tag="GameListRow"
                                             PreviewMouseLeftButtonDown="Card_PreviewMouseLeftButtonDown"
@@ -1671,7 +1686,10 @@
                                                            VerticalAlignment="Center" />
                                             </Border>
 
-                                            <Grid Grid.Column="1" Width="118" Height="64" HorizontalAlignment="Left" ClipToBounds="True">
+                                            <Grid Grid.Column="1"
+                                                  Width="118"
+                                                  Height="{Binding DataContext.ListRowCoverHeight, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                  HorizontalAlignment="Left" ClipToBounds="True">
                                                 <Border CornerRadius="4" ClipToBounds="True" Background="#0B1020">
                                                     <Image Source="{Binding CoverImage}"
                                                            Stretch="UniformToFill"
@@ -1840,6 +1858,7 @@
                                 <DataTemplate>
                                     <Border Style="{StaticResource ArchiveListRowStyle}"
                                             Tag="GameListRow"
+                                            Height="{Binding DataContext.ArchiveListRowHeightOrAuto, RelativeSource={RelativeSource AncestorType=Window}}"
                                             PreviewMouseLeftButtonDown="Card_PreviewMouseLeftButtonDown"
                                             MouseMove="Card_MouseMove"
                                             PreviewMouseLeftButtonUp="Card_PreviewMouseLeftButtonUp"
@@ -1859,7 +1878,7 @@
 
                                             <Border Grid.Column="1"
                                                     Width="118"
-                                                    Height="66"
+                                                    Height="{Binding DataContext.ArchiveListRowCoverHeight, RelativeSource={RelativeSource AncestorType=Window}}"
                                                     CornerRadius="6"
                                                     Background="#0B1020"
                                                     BorderBrush="#324055"

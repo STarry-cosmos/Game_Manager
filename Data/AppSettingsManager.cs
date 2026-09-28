@@ -17,6 +17,15 @@ namespace Game_Manager.Data
         public bool IsAscending { get; init; }
         public bool IsGridView { get; init; } = true;
         public List<CustomCategoryRecord> CustomCategories { get; init; } = new();
+
+        // 卡片尺寸。宽度 0 = 用默认值；高度 0 = 自动（由内容撑开）。
+        // 旧版 settings.json 没有这些字段，反序列化会得到 0，由 CardSizeOptions 负责回退。
+        public int GridCardWidth { get; init; }
+        public int GridCardHeight { get; init; }
+        public int ArchiveGridCardWidth { get; init; }
+        public int ArchiveGridCardHeight { get; init; }
+        public int ListRowHeight { get; init; }
+        public int ArchiveListRowHeight { get; init; }
     }
 
     public static class AppSettingsManager
