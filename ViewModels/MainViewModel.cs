@@ -7,6 +7,7 @@ using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Game_Manager.Data;
+using Game_Manager.Helpers;
 using Game_Manager.Models;
 using Microsoft.Win32;
 using Game_Manager.Services;
@@ -73,6 +74,7 @@ namespace Game_Manager.ViewModels
         public IRelayCommand AddCategoryCommand { get; }
         public IRelayCommand OpenSettingsCommand { get; }
         public IRelayCommand OpenDatabaseFolderCommand { get; }
+        public IRelayCommand OpenProjectUrlCommand { get; }
         public IRelayCommand<GameCategoryViewModel> RenameCategoryCommand { get; }
         public IRelayCommand<GameCategoryViewModel> DeleteCategoryCommand { get; }
         public IRelayCommand<GameCategoryViewModel> SelectCategoryCommand { get; }
@@ -82,6 +84,16 @@ namespace Game_Manager.ViewModels
         public IRelayCommand ShowListViewCommand { get; }
 
         public string DatabaseDirectoryDisplay => DatabaseManager.DatabaseDirectoryPath;
+
+        /// <summary>设置窗口「关于」区展示的版本号，例如 "v0.20.3"。</summary>
+        public string AppVersionDisplay => AppInfo.VersionDisplay;
+
+        /// <summary>四段式程序集版本，作为版本号的补充说明（鼠标悬停可见）。</summary>
+        public string AppBuildDisplay => $"程序集版本 {AppInfo.AssemblyVersion}";
+
+        public string AppLicenseDisplay => AppInfo.LicenseName;
+
+        public string ProjectUrl => AppInfo.ProjectUrl;
 
         private GameCategoryViewModel? _selectedCategory;
         public GameCategoryViewModel? SelectedCategory
@@ -254,6 +266,7 @@ namespace Game_Manager.ViewModels
             AddCategoryCommand = new RelayCommand(AddCategory);
             OpenSettingsCommand = new RelayCommand(OpenSettings);
             OpenDatabaseFolderCommand = new RelayCommand(OpenDatabaseFolder);
+            OpenProjectUrlCommand = new RelayCommand(OpenProjectUrl);
             RenameCategoryCommand = new RelayCommand<GameCategoryViewModel>(RenameCategory);
             DeleteCategoryCommand = new RelayCommand<GameCategoryViewModel>(DeleteCategory);
             SelectCategoryCommand = new RelayCommand<GameCategoryViewModel>(SelectCategory);
@@ -546,6 +559,24 @@ namespace Game_Manager.ViewModels
             {
                 System.Diagnostics.Debug.WriteLine($"OpenDatabaseFolder failed: {ex}");
                 System.Windows.MessageBox.Show($"打开数据库目录失败：{ex.Message}", "错误",
+                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+        }
+
+        private void OpenProjectUrl()
+        {
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = AppInfo.ProjectUrl,
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"OpenProjectUrl failed: {ex}");
+                System.Windows.MessageBox.Show($"打开项目主页失败：{ex.Message}", "错误",
                     System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
         }

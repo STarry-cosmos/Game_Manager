@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="设置"
-        Height="420" Width="520"
+        Height="620" Width="520"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
@@ -27,7 +27,7 @@
                 BorderBrush="#243452"
                 BorderThickness="1">
             <Border.Clip>
-                <RectangleGeometry Rect="0,0,500,400" RadiusX="12" RadiusY="12" />
+                <RectangleGeometry Rect="0,0,500,600" RadiusX="12" RadiusY="12" />
             </Border.Clip>
             <Grid>
                 <Grid.RowDefinitions>
@@ -79,82 +79,151 @@
                     </DockPanel>
                 </Grid>
 
-                <StackPanel Grid.Row="1" Margin="24,20,24,24">
-                    <TextBlock Text="分类管理"
-                               FontSize="13"
-                               FontWeight="SemiBold"
-                               Foreground="#9DA9BF"
-                               Margin="0,0,0,12" />
+                <ScrollViewer Grid.Row="1"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled"
+                              Focusable="False">
+                    <StackPanel Margin="24,20,24,24">
+                        <TextBlock Text="分类管理"
+                                   FontSize="13"
+                                   FontWeight="SemiBold"
+                                   Foreground="#9DA9BF"
+                                   Margin="0,0,0,12" />
 
-                    <Border Padding="16"
-                            CornerRadius="10"
-                            Background="#0E192B"
-                            BorderBrush="#1D2A42"
-                            BorderThickness="1">
-                        <StackPanel>
-                            <TextBlock Text="添加自定义分类，用于整理你的游戏库。"
-                                       FontSize="12"
-                                       Foreground="#8894AA"
-                                       TextWrapping="Wrap"
-                                       Margin="0,0,0,14" />
-                            <Button Command="{Binding AddCategoryCommand}"
-                                    Height="38"
-                                    HorizontalAlignment="Left"
-                                    Padding="16,0"
-                                    Background="#24304A"
-                                    BorderBrush="#294A82"
-                                    BorderThickness="1"
-                                    Foreground="#EAF0FF"
-                                    materialDesign:ButtonAssist.CornerRadius="8"
-                                    Cursor="Hand">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="Plus" Width="14" Height="14" VerticalAlignment="Center" />
-                                    <TextBlock Text="添加分类" Margin="8,0,0,0" VerticalAlignment="Center" />
-                                </StackPanel>
-                            </Button>
-                        </StackPanel>
-                    </Border>
+                        <Border Padding="16"
+                                CornerRadius="10"
+                                Background="#0E192B"
+                                BorderBrush="#1D2A42"
+                                BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="添加自定义分类，用于整理你的游戏库。"
+                                           FontSize="12"
+                                           Foreground="#8894AA"
+                                           TextWrapping="Wrap"
+                                           Margin="0,0,0,14" />
+                                <Button Command="{Binding AddCategoryCommand}"
+                                        Height="38"
+                                        HorizontalAlignment="Left"
+                                        Padding="16,0"
+                                        Background="#24304A"
+                                        BorderBrush="#294A82"
+                                        BorderThickness="1"
+                                        Foreground="#EAF0FF"
+                                        materialDesign:ButtonAssist.CornerRadius="8"
+                                        Cursor="Hand">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Plus" Width="14" Height="14" VerticalAlignment="Center" />
+                                        <TextBlock Text="添加分类" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Border>
 
-                    <TextBlock Text="数据管理"
-                               FontSize="13"
-                               FontWeight="SemiBold"
-                               Foreground="#9DA9BF"
-                               Margin="0,18,0,12" />
+                        <TextBlock Text="数据管理"
+                                   FontSize="13"
+                                   FontWeight="SemiBold"
+                                   Foreground="#9DA9BF"
+                                   Margin="0,18,0,12" />
 
-                    <Border Padding="16"
-                            CornerRadius="10"
-                            Background="#0E192B"
-                            BorderBrush="#1D2A42"
-                            BorderThickness="1">
-                        <StackPanel>
-                            <TextBlock Text="查看本地数据库文件，便于备份或迁移游戏数据。"
-                                       FontSize="12"
-                                       Foreground="#8894AA"
-                                       TextWrapping="Wrap"
-                                       Margin="0,0,0,8" />
-                            <TextBlock Text="{Binding DatabaseDirectoryDisplay}"
-                                       FontSize="11"
-                                       Foreground="#6F7D95"
-                                       TextWrapping="Wrap"
-                                       Margin="0,0,0,14" />
-                            <Button Command="{Binding OpenDatabaseFolderCommand}"
-                                    Height="38"
-                                    HorizontalAlignment="Left"
-                                    Padding="16,0"
-                                    Background="#24304A"
-                                    BorderBrush="#294A82"
-                                    BorderThickness="1"
-                                    Foreground="#EAF0FF"
-                                    materialDesign:ButtonAssist.CornerRadius="8"
-                                    Cursor="Hand">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="FolderOpen" Width="14" Height="14" VerticalAlignment="Center" />
-                                    <TextBlock Text="打开数据库目录" Margin="8,0,0,0" VerticalAlignment="Center" />
-                                </StackPanel>
-                            </Button>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
+                        <Border Padding="16"
+                                CornerRadius="10"
+                                Background="#0E192B"
+                                BorderBrush="#1D2A42"
+                                BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="查看本地数据库文件，便于备份或迁移游戏数据。"
+                                           FontSize="12"
+                                           Foreground="#8894AA"
+                                           TextWrapping="Wrap"
+                                           Margin="0,0,0,8" />
+                                <TextBlock Text="{Binding DatabaseDirectoryDisplay}"
+                                           FontSize="11"
+                                           Foreground="#6F7D95"
+                                           TextWrapping="Wrap"
+                                           Margin="0,0,0,14" />
+                                <Button Command="{Binding OpenDatabaseFolderCommand}"
+                                        Height="38"
+                                        HorizontalAlignment="Left"
+                                        Padding="16,0"
+                                        Background="#24304A"
+                                        BorderBrush="#294A82"
+                                        BorderThickness="1"
+                                        Foreground="#EAF0FF"
+                                        materialDesign:ButtonAssist.CornerRadius="8"
+                                        Cursor="Hand">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="FolderOpen" Width="14" Height="14" VerticalAlignment="Center" />
+                                        <TextBlock Text="打开数据库目录" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Text="关于"
+                                   FontSize="13"
+                                   FontWeight="SemiBold"
+                                   Foreground="#9DA9BF"
+                                   Margin="0,18,0,12" />
+
+                        <Border Padding="16"
+                                CornerRadius="10"
+                                Background="#0E192B"
+                                BorderBrush="#1D2A42"
+                                BorderThickness="1">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,14">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="56" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Grid.Row="0" Grid.Column="0"
+                                               Text="版本"
+                                               FontSize="12"
+                                               Foreground="#8894AA"
+                                               Margin="0,0,0,8" />
+                                    <TextBlock Grid.Row="0" Grid.Column="1"
+                                               Text="{Binding AppVersionDisplay}"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               Foreground="#EAF0FF"
+                                               ToolTip="{Binding AppBuildDisplay}"
+                                               Margin="0,0,0,8" />
+
+                                    <TextBlock Grid.Row="1" Grid.Column="0"
+                                               Text="许可证"
+                                               FontSize="12"
+                                               Foreground="#8894AA" />
+                                    <TextBlock Grid.Row="1" Grid.Column="1"
+                                               Text="{Binding AppLicenseDisplay}"
+                                               FontSize="12"
+                                               Foreground="#C8D2E4" />
+                                </Grid>
+
+                                <Button Command="{Binding OpenProjectUrlCommand}"
+                                        Height="34"
+                                        HorizontalAlignment="Left"
+                                        Padding="14,0"
+                                        Background="#24304A"
+                                        BorderBrush="#294A82"
+                                        BorderThickness="1"
+                                        Foreground="#EAF0FF"
+                                        ToolTip="{Binding ProjectUrl}"
+                                        materialDesign:ButtonAssist.CornerRadius="8"
+                                        Cursor="Hand">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Github" Width="14" Height="14" VerticalAlignment="Center" />
+                                        <TextBlock Text="访问项目主页" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
             </Grid>
         </Border>
     </Grid>
